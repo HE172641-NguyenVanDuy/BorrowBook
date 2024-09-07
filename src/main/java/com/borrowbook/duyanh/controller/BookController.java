@@ -7,6 +7,8 @@ import com.borrowbook.duyanh.entity.Category;
 import com.borrowbook.duyanh.exception.AppException;
 import com.borrowbook.duyanh.exception.ErrorCode;
 import com.borrowbook.duyanh.service.BookService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +18,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/book")
+@Tag(name = "Book Controller")
+
 public class BookController {
 
     private BookService bookService;
@@ -25,6 +29,7 @@ public class BookController {
         this.bookService = bookService;
     }
 
+    @Operation(summary = "Create new book", description = "API create new book into system.")
     @PostMapping("/created-book")
     public ResponseEntity<ApiResponse<Book>> createdBook(@RequestBody @Valid BookCreationRequest request) {
         Book book = bookService.createdBook(request);

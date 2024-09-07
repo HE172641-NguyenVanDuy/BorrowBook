@@ -1,0 +1,8 @@
+
+open:
+  api:
+    title: API Borrow Book document
+    version: v1.0.0
+    description: Meta API Service
+    serverUrl: http://localhost:8080
+    serverName: server dev
