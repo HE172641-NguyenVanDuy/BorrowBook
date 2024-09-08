@@ -13,11 +13,18 @@ import java.util.List;
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Integer> {
 
-    @Query("SELECT c FROM Category c WHERE c.categoryName LIKE :name AND c.status LIKE 'ACTIVE'")
+    @Query("SELECT c FROM Category c WHERE c.categoryName LIKE :name")
     Category existsCategoryActiveByCategoryName(@Param("name") String categoryName);
 
     @Query("SELECT c FROM Category c WHERE c.status LIKE 'ACTIVE'")
     List<Category> getAllCategoryActive();
+
+    @Query("SELECT c FROM Category c WHERE c.status LIKE 'DELETE'")
+    List<Category> getAllCategoryDelete();
+
+    @Modifying
+    @Query("UPDATE Category c SET c.status = 'ACTIVE' WHERE c.id = :cid")
+    int activeCategory(@Param("cid") int id);
 
     @Modifying
     @Transactional

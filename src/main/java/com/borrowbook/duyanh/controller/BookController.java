@@ -58,7 +58,7 @@ public class BookController {
     }
 
     @PutMapping("/update-book/{bookId}")
-    public ResponseEntity<ApiResponse<Book>> updateBook(@PathVariable("bookId") int id, @RequestBody BookCreationRequest request) {
+    public ResponseEntity<ApiResponse<Book>> updateBook(@PathVariable("bookId") int id,@Valid @RequestBody BookCreationRequest request) {
         Book book = bookService.updateBook(request,id);
         ApiResponse<Book> apiResponse = ApiResponse.<Book>builder()
                 .code(200)
@@ -80,7 +80,7 @@ public class BookController {
         return ResponseEntity.ok(apiResponse);
     }
 
-    @GetMapping("/active-book/{bookId}")
+    @PatchMapping("/active-book/{bookId}")
     public ResponseEntity<ApiResponse<Book>> activeBook(@PathVariable("bookId") int bookId) {
         if(!bookService.activeBookById(bookId)) {
             throw new AppException(ErrorCode.ERROR_DELETE);

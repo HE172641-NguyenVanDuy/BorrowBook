@@ -24,8 +24,12 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public Category createCategory(CategoryCreationRequest categoryCreationRequest) {
-        if(categoryRepository.existsCategoryActiveByCategoryName(categoryCreationRequest.getCategoryName()) != null) {
+        if(categoryRepository.existsCategoryActiveByCategoryName(categoryCreationRequest.getCategoryName()) != null
+        && categoryCreationRequest.getStatus().equalsIgnoreCase("ACTIVE")) {
             throw new AppException(ErrorCode.EXISTED_CATEGORY_NAME);
+        } else if(categoryRepository.existsCategoryActiveByCategoryName(categoryCreationRequest.getCategoryName()) != null
+                && categoryCreationRequest.getStatus().equalsIgnoreCase("DELETE")) {
+            throw new AppException(ErrorCode.CATEGORY_EXIST_DELETED);
         }
         Category category = new Category();
         category.setCategoryName(categoryCreationRequest.getCategoryName());
@@ -37,6 +41,13 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public Category updateCategory(CategoryCreationRequest categoryCreationRequest, int categoryId) {
+        if(categoryRepository.existsCategoryActiveByCategoryName(categoryCreationRequest.getCategoryName()) != null
+                && categoryCreationRequest.getStatus().equalsIgnoreCase("ACTIVE")) {
+            throw new AppException(ErrorCode.EXISTED_CATEGORY_NAME);
+        } else if(categoryRepository.existsCategoryActiveByCategoryName(categoryCreationRequest.getCategoryName()) != null
+                && categoryCreationRequest.getStatus().equalsIgnoreCase("DELETE")) {
+            throw new AppException(ErrorCode.CATEGORY_EXIST_DELETED);
+        }
         Category category = getCategoryById(categoryId);
         category.setCategoryName(categoryCreationRequest.getCategoryName());
         category.setStatus(categoryCreationRequest.getStatus());
@@ -47,6 +58,11 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public List<Category> getAllCategory() {
         return categoryRepository.getAllCategoryActive();
+    }
+
+    @Override
+    public List<Category> getAllCategoryDelete() {
+        return categoryRepository.getAllCategoryDelete();
     }
 
     @Override
@@ -62,5 +78,10 @@ public class CategoryServiceImpl implements CategoryService {
             return affectedBooks > 0;
         }
         return false;
+    }
+
+    @Override
+    public boolean activeCategory(int cid) {
+        return categoryRepository.activeCategory(cid) > 0;
     }
 }

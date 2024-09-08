@@ -55,7 +55,7 @@ public class CategoryController {
     }
 
     @PutMapping("/update-category/{categoryId}")
-    public Category updateCategoryById(@RequestBody CategoryCreationRequest request,@PathVariable("categoryId") int categoryId) {
+    public Category updateCategoryById(@Valid @RequestBody CategoryCreationRequest request,@PathVariable("categoryId") int categoryId) {
         return categoryService.updateCategory(request,categoryId);
     }
 
@@ -67,6 +67,23 @@ public class CategoryController {
         ApiResponse<Category> apiResponse = ApiResponse.<Category>builder()
                 .code(200)
                 .message(ErrorCode.CATEGORY_DELETED.getMessage())
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @GetMapping("all-delete")
+    public List<Category> getAllCategoryDelete() {
+        return categoryService.getAllCategoryDelete();
+    }
+
+    @PatchMapping("/active-category/{id}")
+    public ResponseEntity<ApiResponse<Category>> activeCategory(@PathVariable("id") int id) {
+        if(!categoryService.activeCategory(id)) {
+            throw new AppException(ErrorCode.NOT_FOUND);
+        }
+        ApiResponse<Category> apiResponse = ApiResponse.<Category>builder()
+                .code(200)
+                .message(ErrorCode.SUCCESS.getMessage())
                 .build();
         return ResponseEntity.ok(apiResponse);
     }
