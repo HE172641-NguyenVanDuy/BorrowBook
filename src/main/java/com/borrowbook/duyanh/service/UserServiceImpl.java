@@ -6,7 +6,11 @@ import com.borrowbook.duyanh.entity.User;
 import com.borrowbook.duyanh.exception.ErrorCode;
 import com.borrowbook.duyanh.repository.RoleRepository;
 import com.borrowbook.duyanh.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,19 +32,42 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public List<User> getAllUserActive() {
-        return userRepository.getAllUserActive();
+    public Page<User> getAllUserActive(int page, int size, String sortBy, String sortDirection) {
+        // Xác định chiều sắp xếp dựa trên tham số
+        Sort.Direction direction;
+        try {
+            direction = Sort.Direction.fromString(sortDirection);
+        } catch (IllegalArgumentException e) {
+            direction = Sort.Direction.ASC; // Giá trị mặc định nếu có lỗi
+        }
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction,sortBy));
+        return userRepository.getAllUserActive(pageable);
     }
 
     @Override
-    public List<User> getAllUserDeleted() {
-        return userRepository.getAllUserDeleted();
+    public Page<User> getAllUserDeleted(int page, int size, String sortBy, String sortDirection) {
+        // Xác định chiều sắp xếp dựa trên tham số
+        Sort.Direction direction;
+        try {
+            direction = Sort.Direction.fromString(sortDirection);
+        } catch (IllegalArgumentException e) {
+            direction = Sort.Direction.ASC; // Giá trị mặc định nếu có lỗi
+        }
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction,sortBy));
+        return userRepository.getAllUserDeleted(pageable);
     }
 
     @Override
-    @Transactional
-    public List<User> getAllUserBanned() {
-        return userRepository.getAllUserBanned();
+    public Page<User> getAllUserBanned(int page, int size, String sortBy, String sortDirection) {
+        // Xác định chiều sắp xếp dựa trên tham số
+        Sort.Direction direction;
+        try {
+            direction = Sort.Direction.fromString(sortDirection);
+        } catch (IllegalArgumentException e) {
+            direction = Sort.Direction.ASC; // Giá trị mặc định nếu có lỗi
+        }
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction,sortBy));
+        return userRepository.getAllUserBanned(pageable);
     }
 
     @Override

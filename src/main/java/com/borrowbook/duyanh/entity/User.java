@@ -2,7 +2,6 @@ package com.borrowbook.duyanh.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.Id;
 
 @Entity
 @Table(name = "User")
@@ -35,5 +34,8 @@ public class User {
     })
     @JoinColumn(name = "role_id")
     private Role role;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private InformationOfUser informationOfUser;
 
 }

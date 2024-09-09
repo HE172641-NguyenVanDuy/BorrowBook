@@ -3,7 +3,7 @@ package com.borrowbook.duyanh.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.Id;
+
 
 import java.util.List;
 

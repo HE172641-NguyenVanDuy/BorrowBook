@@ -1,6 +1,9 @@
 package com.borrowbook.duyanh.repository;
 
 import com.borrowbook.duyanh.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -15,23 +18,25 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     boolean existsByUsername(String username);
 
     @Query("SELECT s FROM User s WHERE s.status LIKE 'ACTIVE' ")
-    List<User> getAllUserActive();
+    Page<User> getAllUserActive(Pageable pageable);
 
     @Query("SELECT s FROM User s WHERE s.status LIKE 'DELETE' ")
-    List<User> getAllUserDeleted();
+    Page<User> getAllUserDeleted(Pageable pageable);
 
     @Query("SELECT s FROM User s WHERE s.status LIKE 'BAN' ")
-    List<User> getAllUserBanned();
+    Page<User> getAllUserBanned(Pageable pageable);
 
     @Modifying
-    @Query("UPDATE User u SET u.status = 'ACTIVE' WHERE c.id = :id")
+    @Query("UPDATE User u SET u.status = 'ACTIVE' WHERE u.id = :id")
     int activeUserById(@Param("id") int id);
 
     @Modifying
-    @Query("UPDATE User u SET u.status = 'DELETE' WHERE c.id = :id")
+    @Query("UPDATE User u SET u.status = 'DELETE' WHERE u.id = :id")
     int deleteUserById(@Param("id") int id);
 
     @Modifying
-    @Query("UPDATE User u SET u.status = 'BAN' WHERE c.id = :id")
+    @Query("UPDATE User u SET u.status = 'BAN' WHERE u.id = :id")
     int banUserById(@Param("id") int id);
+
+
 }

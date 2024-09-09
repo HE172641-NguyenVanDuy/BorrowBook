@@ -31,7 +31,7 @@ public class Category {
     private String status;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "category")  // `category` là thuộc tính trong lớp Book
+    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)  // `category` là thuộc tính trong lớp Book
     private List<Book> listBooks;
 
 }

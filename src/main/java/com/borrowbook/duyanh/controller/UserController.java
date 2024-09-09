@@ -8,6 +8,10 @@ import com.borrowbook.duyanh.exception.AppException;
 import com.borrowbook.duyanh.exception.ErrorCode;
 import com.borrowbook.duyanh.service.UserService;
 import jakarta.validation.Valid;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -55,18 +59,30 @@ public class UserController {
     }
 
     @GetMapping("get-all-active")
-    public List<User> getAllUserActive() {
-        return userService.getAllUserActive();
+    public ResponseEntity<Page<User>> getAllUserActive(@RequestParam(defaultValue = "0") int page,
+                                       @RequestParam(defaultValue = "2") int size,
+                                       @RequestParam(defaultValue = "username") String sortBy,
+                                       @RequestParam(defaultValue = "asc") String sortDirection) {
+        Page<User> users = userService.getAllUserActive(page,size,sortBy,sortDirection);
+        return ResponseEntity.ok(users);
     }
 
     @GetMapping("get-all-delete")
-    public List<User> getAllUserDelete() {
-        return userService.getAllUserDeleted();
+    public ResponseEntity<Page<User>> getAllUserDelete(@RequestParam(defaultValue = "0") int page,
+                                       @RequestParam(defaultValue = "2") int size,
+                                       @RequestParam(defaultValue = "username") String sortBy,
+                                       @RequestParam(defaultValue = "asc") String sortDirection) {
+        Page<User> users = userService.getAllUserDeleted(page,size,sortBy,sortDirection);
+        return ResponseEntity.ok(users);
     }
 
     @GetMapping("get-all-banned")
-    public List<User> getAllUserBanned() {
-        return userService.getAllUserBanned();
+    public ResponseEntity<Page<User>> getAllUserBanned(@RequestParam(defaultValue = "0") int page,
+                                                       @RequestParam(defaultValue = "2") int size,
+                                                       @RequestParam(defaultValue = "username") String sortBy,
+                                                       @RequestParam(defaultValue = "asc") String sortDirection) {
+        Page<User> users = userService.getAllUserBanned(page,size,sortBy,sortDirection);
+        return ResponseEntity.ok(users);
     }
 
     @PatchMapping("/active-user/{id}")

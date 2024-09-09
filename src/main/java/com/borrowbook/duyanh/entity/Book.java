@@ -41,7 +41,7 @@ public class Book {
     @Column(name = "status")
     private String status;
 
-    @ManyToOne( cascade = {
+    @ManyToOne(fetch = FetchType.EAGER, cascade = {
             CascadeType.DETACH,
             CascadeType.MERGE,
             CascadeType.PERSIST, CascadeType.REFRESH
