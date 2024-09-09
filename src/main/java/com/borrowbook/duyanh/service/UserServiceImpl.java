@@ -23,6 +23,8 @@ public class UserServiceImpl implements UserService{
     private UserRepository userRepository;
     @Autowired
     private RoleRepository roleRepository;
+    @Autowired
+    private InformationOfUserService informationOfUserService;
 
     @Override
     public User getUserById(int id) {
@@ -99,8 +101,11 @@ public class UserServiceImpl implements UserService{
         user.setUsername(request.getUsername());
         user.setPassword(request.getPassword());
         user.setStatus(request.getStatus());
-        userRepository.save(user);
-        return user;
+
+        User savedUser = userRepository.save(user);
+        informationOfUserService.saveInformationOfUser(request,savedUser);
+
+        return savedUser;
     }
 
     @Override
@@ -114,7 +119,10 @@ public class UserServiceImpl implements UserService{
         user.setUsername(request.getUsername());
         user.setPassword(request.getPassword());
         user.setRole(role);
-        userRepository.saveAndFlush(user);
-        return user;
+
+        User changedUser = userRepository.saveAndFlush(user);
+        informationOfUserService.updateInformationOfUser(request,changedUser);
+
+        return changedUser;
     }
 }

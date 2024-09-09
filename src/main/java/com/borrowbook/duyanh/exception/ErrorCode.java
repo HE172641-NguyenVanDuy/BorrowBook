@@ -1,6 +1,10 @@
 package com.borrowbook.duyanh.exception;
 
 public enum ErrorCode {
+
+    USER_FAIL_IMPORT(1006,"Import not successfully.!"),
+    USER_EXPORT(1006,"Export successfully.!"),
+    USER_EXPORT_FAIL(1006,"Failed to generate user's list!"),
     USER_DELETED(1006,"User deleted successfully !"),
     USER_UPDATED(1006,"User updated successfully !"),
     USER_CREATED(1006,"User created successfully !"),

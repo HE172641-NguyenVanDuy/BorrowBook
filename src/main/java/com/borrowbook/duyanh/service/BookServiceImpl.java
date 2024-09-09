@@ -38,8 +38,8 @@ public class BookServiceImpl implements BookService{
         book.setAuthor(request.getAuthor());
         book.setQuantity(request.getQuantity());
         book.setCategory(category);
-        bookRepository.save(book);
-        return book;
+
+        return bookRepository.save(book);
     }
 
     @Override
@@ -62,8 +62,8 @@ public class BookServiceImpl implements BookService{
         book.setAuthor(request.getAuthor());
         book.setQuantity(request.getQuantity());
         book.setCategory(category);
-        bookRepository.saveAndFlush(book);
-        return book;
+
+        return bookRepository.saveAndFlush(book);
     }
 
     @Transactional

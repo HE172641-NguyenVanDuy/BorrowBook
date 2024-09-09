@@ -34,8 +34,8 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = new Category();
         category.setCategoryName(categoryCreationRequest.getCategoryName());
         category.setStatus(categoryCreationRequest.getStatus());
-        categoryRepository.save(category);
-        return category;
+
+        return categoryRepository.save(category);
     }
 
     @Override
@@ -51,8 +51,8 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = getCategoryById(categoryId);
         category.setCategoryName(categoryCreationRequest.getCategoryName());
         category.setStatus(categoryCreationRequest.getStatus());
-        categoryRepository.saveAndFlush(category);
-        return category;
+
+        return categoryRepository.saveAndFlush(category);
     }
 
     @Override

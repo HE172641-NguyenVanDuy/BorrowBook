@@ -1,11 +1,10 @@
 package com.borrowbook.duyanh.dto.request;
 
 import com.borrowbook.duyanh.validation.annotation.UniqueUsername;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.*;
+
+import java.util.Date;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -28,6 +27,20 @@ public class UserDTO {
     @NotNull(message = "Status of user can not be null.")
     private String status;
 
+    @NotBlank(message = "Email is mandatory")
+    @Pattern(regexp = "^[A-Za-z0-9+_.-]+@(.+)$", message = "Email should be valid")
+    private String email;
+
+    @NotBlank(message = "Phone number is mandatory")
+    @Pattern(regexp = "^(?:\\+84|0)(?:[1-9]\\d{8})$", message = "Phone number should be valid Vietnamese phone number")
+    private String phoneNumber;
+
+    @NotNull(message = "Date of birth is mandatory")
+    @Past(message = "Date of birth must be in the past")
+    private Date dob;
+
     @NotNull(message = "Role of user can not be null.")
     private int rid;
+
+
 }
