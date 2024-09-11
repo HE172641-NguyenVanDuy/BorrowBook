@@ -17,13 +17,13 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     boolean existsByUsername(String username);
 
-    @Query("SELECT s.username, s.status, s.role_id FROM User s WHERE s.status LIKE 'ACTIVE' ")
+    @Query("SELECT s  FROM User s WHERE s.status LIKE 'ACTIVE' ")
     Page<User> getAllUserActive(Pageable pageable);
 
-    @Query("SELECT s.username, s.status, s.role_id FROM User s WHERE s.status LIKE 'DELETE' ")
+    @Query("SELECT s  FROM User s WHERE s.status LIKE 'DELETE' ")
     Page<User> getAllUserDeleted(Pageable pageable);
 
-    @Query("SELECT s.username, s.status, s.role_id FROM User s WHERE s.status LIKE 'BAN' ")
+    @Query("SELECT s  FROM User s WHERE s.status LIKE 'BAN' ")
     Page<User> getAllUserBanned(Pageable pageable);
 
     @Modifying

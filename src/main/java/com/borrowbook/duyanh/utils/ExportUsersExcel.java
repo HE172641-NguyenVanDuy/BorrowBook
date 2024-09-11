@@ -18,10 +18,12 @@ import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+//import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.io.FileInputStream;
@@ -56,30 +58,32 @@ public class ExportUsersExcel {
 
     public void generateExcel(HttpServletResponse response) throws IOException {
         List<User> usersList = userRepository.findAll();
-        HSSFWorkbook workbook = new HSSFWorkbook();
-        HSSFSheet sheet = workbook.createSheet("User list");
-        HSSFRow row = sheet.createRow(0);
+        XSSFWorkbook workbook = new XSSFWorkbook();
+        XSSFSheet sheet = workbook.createSheet("User list");
+        XSSFRow row = sheet.createRow(0);
 
-        row.createCell(0).setCellValue("Id");
-        row.createCell(1).setCellValue("CategoryName");
-        row.createCell(2).setCellValue("Status");
+        row.createCell(0).setCellValue("User name");
+        row.createCell(1).setCellValue("Role name");
+        row.createCell(2).setCellValue("Email");
+        row.createCell(3).setCellValue("Phone number");
+        row.createCell(4).setCellValue("Dob");
+        row.createCell(5).setCellValue("Status");
 
         int dataRowIndex = 1;
         for(User u: usersList) {
-
-            HSSFRow dataRow = sheet.createRow(dataRowIndex);
-            dataRow.createCell(0).setCellValue(u.getId());
-            dataRow.createCell(1).setCellValue(u.getUsername());
-            dataRow.createCell(2).setCellValue(u.getRole().getRoleName());
+            XSSFRow dataRow = sheet.createRow(dataRowIndex);
+            dataRow.createCell(0).setCellValue(u.getUsername());
+            dataRow.createCell(1).setCellValue(u.getRole().getRoleName());
             InformationOfUser informationOfUser = informationOfUserRepository.findById(u.getId()).orElseThrow(
                     () -> new RuntimeException(ErrorCode.NOT_FOUND.getMessage())
             );
-            dataRow.createCell(3).setCellValue(informationOfUser.getEmail());
-            dataRow.createCell(4).setCellValue(informationOfUser.getPhoneNumber());
-            dataRow.createCell(5).setCellValue(informationOfUser.getDob());
-            dataRow.createCell(6).setCellValue(u.getStatus());
+            dataRow.createCell(2).setCellValue(informationOfUser.getEmail());
+            dataRow.createCell(3).setCellValue(informationOfUser.getPhoneNumber());
+            dataRow.createCell(4).setCellValue(informationOfUser.getDob());
+            dataRow.createCell(5).setCellValue(u.getStatus());
             dataRowIndex++;
         }
+
         ServletOutputStream outputStream = response.getOutputStream();
         workbook.write(outputStream);
         workbook.close();
@@ -89,7 +93,7 @@ public class ExportUsersExcel {
     public void saveExcelData(String filePath) {
         //List<Category> list = new ArrayList<>();
 
-        BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
+       // BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder(12);
         try {
             FileInputStream fis = new FileInputStream(filePath);
 
@@ -117,9 +121,11 @@ public class ExportUsersExcel {
                 if(r.getCell(1).getCellType() == CellType.STRING) {
                     String password = r.getCell(1).getStringCellValue();
                     if (checkPassword(password,r))
-                        user.setPassword(bCryptPasswordEncoder.encode(password));
+                        //user.setPassword(bCryptPasswordEncoder.encode(password));
+                        user.setPassword(password);
                 } else {
-                    user.setPassword(bCryptPasswordEncoder.encode(defaultPassword));
+                    user.setPassword(defaultPassword);
+                    //user.setPassword(bCryptPasswordEncoder.encode(defaultPassword));
                 }
                 if (r.getCell(2).getCellType() == CellType.STRING) {
                     String phoneNumber = r.getCell(2).getStringCellValue();
@@ -212,7 +218,8 @@ public class ExportUsersExcel {
                 ROLE_USER.equalsIgnoreCase(roleName) ||
                 ROLE_LIBRARIAN.equalsIgnoreCase(roleName) ||
                 ROLE_MANAGER.equalsIgnoreCase(roleName)) {
-            Role role = roleRepository.getRoleByRoleName(roleName);
+            //Role role = roleRepository.getRolesByRoleName(roleName);
+            Role role = roleRepository.findByRoleName(roleName);
             return role;
         } else {
             throw new IllegalArgumentException("Invalid user status: " + roleName); // Trạng thái không hợp lệ

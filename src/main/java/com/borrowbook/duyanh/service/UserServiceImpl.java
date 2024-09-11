@@ -1,6 +1,7 @@
 package com.borrowbook.duyanh.service;
 
 import com.borrowbook.duyanh.dto.request.UserDTO;
+import com.borrowbook.duyanh.dto.response.PageResponse;
 import com.borrowbook.duyanh.entity.Role;
 import com.borrowbook.duyanh.entity.User;
 import com.borrowbook.duyanh.exception.ErrorCode;
@@ -11,10 +12,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
+//import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+
 
 @Service
 public class UserServiceImpl implements UserService{
@@ -26,6 +29,8 @@ public class UserServiceImpl implements UserService{
     @Autowired
     private InformationOfUserService informationOfUserService;
 
+    //private final BCryptPasswordEncoder bCrypt  = new BCryptPasswordEncoder(12);
+
     @Override
     public User getUserById(int id) {
         return userRepository.findById(id).orElseThrow(
@@ -34,7 +39,7 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public Page<User> getAllUserActive(int page, int size, String sortBy, String sortDirection) {
+    public PageResponse<User> getAllUserActive(int page, int size, String sortBy, String sortDirection) {
         // Xác định chiều sắp xếp dựa trên tham số
         Sort.Direction direction;
         try {
@@ -42,12 +47,19 @@ public class UserServiceImpl implements UserService{
         } catch (IllegalArgumentException e) {
             direction = Sort.Direction.ASC; // Giá trị mặc định nếu có lỗi
         }
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction,sortBy));
-        return userRepository.getAllUserActive(pageable);
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(direction,sortBy));
+        var pageData = userRepository.getAllUserActive(pageable);
+        return PageResponse.<User>builder()
+                .currentPage(page)
+                .pageSize(pageData.getSize())
+                .totalPages(pageData.getTotalPages())
+                .totalElement(pageData.getTotalElements())
+                .data(pageData.stream().toList())
+                .build();
     }
 
     @Override
-    public Page<User> getAllUserDeleted(int page, int size, String sortBy, String sortDirection) {
+    public PageResponse<User> getAllUserDeleted(int page, int size, String sortBy, String sortDirection) {
         // Xác định chiều sắp xếp dựa trên tham số
         Sort.Direction direction;
         try {
@@ -55,12 +67,19 @@ public class UserServiceImpl implements UserService{
         } catch (IllegalArgumentException e) {
             direction = Sort.Direction.ASC; // Giá trị mặc định nếu có lỗi
         }
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction,sortBy));
-        return userRepository.getAllUserDeleted(pageable);
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(direction,sortBy));
+        var pageData = userRepository.getAllUserDeleted(pageable);
+        return PageResponse.<User>builder()
+                .currentPage(page)
+                .pageSize(pageData.getSize())
+                .totalPages(pageData.getTotalPages())
+                .totalElement(pageData.getTotalElements())
+                .data(pageData.stream().toList())
+                .build();
     }
 
     @Override
-    public Page<User> getAllUserBanned(int page, int size, String sortBy, String sortDirection) {
+    public PageResponse<User>  getAllUserBanned(int page, int size, String sortBy, String sortDirection) {
         // Xác định chiều sắp xếp dựa trên tham số
         Sort.Direction direction;
         try {
@@ -68,8 +87,15 @@ public class UserServiceImpl implements UserService{
         } catch (IllegalArgumentException e) {
             direction = Sort.Direction.ASC; // Giá trị mặc định nếu có lỗi
         }
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction,sortBy));
-        return userRepository.getAllUserBanned(pageable);
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(direction,sortBy));
+        var pageData = userRepository.getAllUserBanned(pageable);
+        return PageResponse.<User>builder()
+                .currentPage(page)
+                .pageSize(pageData.getSize())
+                .totalPages(pageData.getTotalPages())
+                .totalElement(pageData.getTotalElements())
+                .data(pageData.stream().toList())
+                .build();
     }
 
     @Override
@@ -96,11 +122,13 @@ public class UserServiceImpl implements UserService{
         Role role = roleRepository.findById(request.getRid()).orElseThrow(
                 () -> new RuntimeException(ErrorCode.NOT_FOUND.getMessage())
         );
+
         User user = new User();
         user.setRole(role);
         user.setUsername(request.getUsername());
         user.setPassword(request.getPassword());
-        user.setStatus(request.getStatus());
+        //user.setPassword(bCrypt.encode(request.getPassword()));
+        user.setStatus(request.getStatus().toUpperCase());
 
         User savedUser = userRepository.save(user);
         informationOfUserService.saveInformationOfUser(request,savedUser);
@@ -115,11 +143,11 @@ public class UserServiceImpl implements UserService{
         Role role = roleRepository.findById(request.getRid()).orElseThrow(
                 () -> new RuntimeException(ErrorCode.NOT_FOUND.getMessage())
         );
-        user.setStatus(request.getStatus());
+        user.setStatus(request.getStatus().toUpperCase());
         user.setUsername(request.getUsername());
         user.setPassword(request.getPassword());
+        //user.setPassword(bCrypt.encode(request.getPassword()));
         user.setRole(role);
-
         User changedUser = userRepository.saveAndFlush(user);
         informationOfUserService.updateInformationOfUser(request,changedUser);
 

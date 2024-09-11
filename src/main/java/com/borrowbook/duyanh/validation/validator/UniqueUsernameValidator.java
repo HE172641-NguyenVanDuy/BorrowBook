@@ -2,12 +2,12 @@ package com.borrowbook.duyanh.validation.validator;
 
 
 import com.borrowbook.duyanh.repository.UserRepository;
-import com.borrowbook.duyanh.validation.annotation.UniqueUsername;
+import com.borrowbook.duyanh.validation.annotation.Unique;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class UniqueUsernameValidator implements ConstraintValidator<UniqueUsername, String> {
+public class UniqueUsernameValidator implements ConstraintValidator<Unique, String> {
 
     @Autowired
     private UserRepository userRepository; // hoặc UserService nếu dùng service layer
@@ -21,7 +21,7 @@ public class UniqueUsernameValidator implements ConstraintValidator<UniqueUserna
     }
 
     @Override
-    public void initialize(UniqueUsername constraintAnnotation) {
+    public void initialize(Unique constraintAnnotation) {
         ConstraintValidator.super.initialize(constraintAnnotation);
     }
 

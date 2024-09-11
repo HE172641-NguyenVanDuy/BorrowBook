@@ -1,12 +1,11 @@
 package com.borrowbook.duyanh.service;
 
-import com.borrowbook.duyanh.dto.request.InformationOfUserDTO;
 import com.borrowbook.duyanh.dto.request.UserDTO;
 import com.borrowbook.duyanh.entity.InformationOfUser;
 import com.borrowbook.duyanh.entity.User;
+import com.borrowbook.duyanh.exception.AppException;
 import com.borrowbook.duyanh.exception.ErrorCode;
 import com.borrowbook.duyanh.repository.InformationOfUserRepository;
-import com.borrowbook.duyanh.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +29,7 @@ public class InformationOfUserServiceImpl implements InformationOfUserService{
         informationOfUser.setDob(dto.getDob());
         informationOfUser.setEmail(dto.getEmail());
         informationOfUser.setPhoneNumber(dto.getPhoneNumber());
-//        informationOfUser.setUserId(user.getId());
+        informationOfUser.setUserId(user.getId());
         repository.save(informationOfUser);
         return informationOfUser;
     }
@@ -40,9 +39,14 @@ public class InformationOfUserServiceImpl implements InformationOfUserService{
         InformationOfUser informationOfUser = getInformationOfUserByUserId(user.getId());
         informationOfUser.setUser(user);
         informationOfUser.setDob(dto.getDob());
-        informationOfUser.setEmail(dto.getEmail());
-        informationOfUser.setPhoneNumber(dto.getPhoneNumber());
-//        informationOfUser.setUserId(user.getId());
+        if(!repository.existsByEmail(dto.getEmail())) {
+            informationOfUser.setEmail(dto.getEmail());
+        } else throw new AppException(ErrorCode.EXIST_EMAIL);
+
+        if(!repository.existsByPhoneNumber(dto.getPhoneNumber())) {
+            informationOfUser.setPhoneNumber(dto.getPhoneNumber());
+        } else throw new AppException(ErrorCode.EXIST_PHONE_NUMBER);
+        informationOfUser.setUserId(user.getId());
         repository.saveAndFlush(informationOfUser);
         return informationOfUser;
     }

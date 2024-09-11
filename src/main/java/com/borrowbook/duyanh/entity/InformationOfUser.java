@@ -1,12 +1,13 @@
 package com.borrowbook.duyanh.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.Date;
 
 @Entity
-@Table(name = "InformationOfUser")
+@Table(name = "information_of_user")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -15,8 +16,12 @@ import java.util.Date;
 public class InformationOfUser {
 
 
-    @Column(name = "user_id")
-    private int userId;
+
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @MapsId
+    @JsonBackReference
+    @JoinColumn(name = "user_id") // Tên cột khóa ngoại
+    private User user;
 
     @Column(name = "email")
     private String email;
@@ -28,8 +33,7 @@ public class InformationOfUser {
     private Date dob;
 
     @Id
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @MapsId
-    @JoinColumn(name = "user_id") // Tên cột khóa ngoại
-    private User user;
+    @Column(name = "user_id")
+    private int userId;
+
 }
