@@ -12,7 +12,7 @@ public interface BorrowDetailService {
 
     boolean returningBook( int bookId);
 
-    List<BorrowDetail> getAllBorrowDetailByBorrowId( int borrowId);
-
-    List<BorrowDetail> getAllBorrowDetailBorrowingByBorrowId(int borrowId);
+//    List<BorrowDetail> getAllBorrowDetailByBorrowId( int borrowId);
+//
+//    List<BorrowDetail> getAllBorrowDetailBorrowingByBorrowId(int borrowId);
 }

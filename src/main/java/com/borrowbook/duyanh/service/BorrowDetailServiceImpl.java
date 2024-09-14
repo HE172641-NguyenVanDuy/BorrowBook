@@ -53,13 +53,13 @@ public class BorrowDetailServiceImpl implements BorrowDetailService {
         return borrowDetailRepository.returningBook(id) > 0;
     }
 
-    @Override
-    public List<BorrowDetail> getAllBorrowDetailByBorrowId(int borrowId) {
-        return borrowDetailRepository.getBorrowDetailBorrowByBorrowId(borrowId);
-    }
-
-    @Override
-    public List<BorrowDetail> getAllBorrowDetailBorrowingByBorrowId(int borrowId) {
-        return borrowDetailRepository.getAllBorrowDetailByBorrowId(borrowId);
-    }
+//    @Override
+//    public List<BorrowDetail> getAllBorrowDetailByBorrowId(int borrowId) {
+//        return borrowDetailRepository.getBorrowDetailBorrowByBorrowId(borrowId);
+//    }
+//
+//    @Override
+//    public List<BorrowDetail> getAllBorrowDetailBorrowingByBorrowId(int borrowId) {
+//        return borrowDetailRepository.getAllBorrowDetailByBorrowId(borrowId);
+//    }
 }
