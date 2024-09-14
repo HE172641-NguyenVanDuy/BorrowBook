@@ -1,6 +1,9 @@
 package com.borrowbook.duyanh.exception;
 
 public enum ErrorCode {
+    USER_BANNED(1006,"Your account has been banned"),
+    ENOUGH_BOOK(1007,"Not enough book available!"),
+    ERROR(1001,"Error!"),
     EXIST_PHONE_NUMBER(1006,"Phone number is already exist!"),
     EXIST_EMAIL(1006,"Email is already exist!"),
     USER_FAIL_IMPORT(1006,"Import not successfully!"),

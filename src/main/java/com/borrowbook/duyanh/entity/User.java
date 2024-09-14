@@ -1,8 +1,11 @@
 package com.borrowbook.duyanh.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.List;
 
 @Entity
 @Table(name = "User")
@@ -39,5 +42,9 @@ public class User {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonManagedReference
     private InformationOfUser informationOfUser;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "User")
+    private List<Borrow> borrows;
 
 }

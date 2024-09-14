@@ -15,6 +15,8 @@ import java.util.List;
 @Repository
 public interface UserRepository extends JpaRepository<User, Integer> {
 
+//    User getUserById(int id);
+
     boolean existsByUsername(String username);
 
     @Query("SELECT s  FROM User s WHERE s.status LIKE 'ACTIVE' ")

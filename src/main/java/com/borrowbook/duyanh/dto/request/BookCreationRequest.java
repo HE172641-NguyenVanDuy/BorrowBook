@@ -4,6 +4,7 @@ package com.borrowbook.duyanh.dto.request;
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import org.apache.poi.hpsf.Decimal;
 
 import java.math.BigDecimal;
 import java.util.Date;

@@ -3,6 +3,7 @@ package com.borrowbook.duyanh.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import lombok.*;
+import org.apache.poi.hpsf.Decimal;
 
 import java.math.BigDecimal;
 import java.util.Date;

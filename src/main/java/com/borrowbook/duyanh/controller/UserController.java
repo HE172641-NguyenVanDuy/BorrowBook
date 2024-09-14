@@ -108,7 +108,7 @@ public class UserController {
     @PatchMapping("/active-user/{id}")
     public ResponseEntity<ApiResponse<Category>> activeUser(@PathVariable("id") int id) {
         if (!userService.activeUserById(id)) {
-            throw new AppException(ErrorCode.NOT_FOUND);
+            throw new AppException(ErrorCode.ERROR);
         }
         ApiResponse<Category> apiResponse = ApiResponse.<Category>builder()
                 .code(200)
@@ -120,7 +120,7 @@ public class UserController {
     @PatchMapping("/delete-user/{id}")
     public ResponseEntity<ApiResponse<Category>> deleteUser(@PathVariable("id") int id) {
         if (!userService.deleteUserById(id)) {
-            throw new AppException(ErrorCode.NOT_FOUND);
+            throw new AppException(ErrorCode.ERROR);
         }
         ApiResponse<Category> apiResponse = ApiResponse.<Category>builder()
                 .code(200)
@@ -132,7 +132,7 @@ public class UserController {
     @PatchMapping("/ban-user/{id}")
     public ResponseEntity<ApiResponse<Category>> banUser(@PathVariable("id") int id) {
         if (!userService.banUserById(id)) {
-            throw new AppException(ErrorCode.NOT_FOUND);
+            throw new AppException(ErrorCode.ERROR);
         }
         ApiResponse<Category> apiResponse = ApiResponse.<Category>builder()
                 .code(200)
