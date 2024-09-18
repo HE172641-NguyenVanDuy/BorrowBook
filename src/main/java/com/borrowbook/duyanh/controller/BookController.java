@@ -2,8 +2,8 @@ package com.borrowbook.duyanh.controller;
 
 import com.borrowbook.duyanh.dto.request.BookCreationRequest;
 import com.borrowbook.duyanh.dto.response.ApiResponse;
+import com.borrowbook.duyanh.dto.response.PageResponse;
 import com.borrowbook.duyanh.entity.Book;
-import com.borrowbook.duyanh.entity.Category;
 import com.borrowbook.duyanh.exception.AppException;
 import com.borrowbook.duyanh.exception.ErrorCode;
 import com.borrowbook.duyanh.service.BookService;
@@ -41,11 +41,6 @@ public class BookController {
         return ResponseEntity.ok(apiResponse);
     }
 
-    @GetMapping("/get-all")
-    public List<Book> getAllBookActive() {
-        return bookService.getAllBookActive();
-    }
-
     @GetMapping("/{bookId}")
     public ResponseEntity<ApiResponse<Book>> getBookById(@PathVariable("bookId") int id) {
         Book book = bookService.getBookById(id);
@@ -58,7 +53,8 @@ public class BookController {
     }
 
     @PutMapping("/update-book/{bookId}")
-    public ResponseEntity<ApiResponse<Book>> updateBook(@PathVariable("bookId") int id,@Valid @RequestBody BookCreationRequest request) {
+    public ResponseEntity<ApiResponse<Book>> updateBook(@PathVariable("bookId") int id,
+                                                        @Valid @RequestBody BookCreationRequest request) {
         Book book = bookService.updateBook(request,id);
         ApiResponse<Book> apiResponse = ApiResponse.<Book>builder()
                 .code(200)
@@ -93,12 +89,68 @@ public class BookController {
     }
 
     @GetMapping("/get-all-deleted-book")
-    public List<Book> getAllDeletedBook() {
-        return bookService.getAllDeleteBook();
+    public ResponseEntity<ApiResponse<PageResponse<Book>>> getAllDeletedBook(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "2") int size,
+            @RequestParam(value = "sort", defaultValue = "BookName") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection) {
+
+        PageResponse<Book> books = bookService.getAllDeleteBook(page, size, sortBy, sortDirection);
+        ApiResponse<PageResponse<Book>> apiResponse = ApiResponse.<PageResponse<Book>>builder()
+                .code(200)
+                .message(ErrorCode.SUCCESS.getMessage())
+                .result(books)
+                .build();
+        return ResponseEntity.ok(apiResponse);
     }
 
     @GetMapping("/get-book-by-category/{categoryId}")
-    public List<Book> getAllBookByCategoryId(@PathVariable("categoryId") int cId) {
-        return bookService.getAllBookByCategoryId(cId);
+    public ResponseEntity<ApiResponse<PageResponse<Book>>> getAllBookByCategoryId(
+            @PathVariable("categoryId") int cId,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "2") int size,
+            @RequestParam(value = "sort", defaultValue = "BookName") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection) {
+
+        PageResponse<Book> books = bookService.getAllBookByCategoryId(page, size, sortBy, sortDirection,cId);
+        ApiResponse<PageResponse<Book>> apiResponse = ApiResponse.<PageResponse<Book>>builder()
+                .code(200)
+                .message(ErrorCode.SUCCESS.getMessage())
+                .result(books)
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @GetMapping("/get-book-by-post/{postId}")
+    public ResponseEntity<ApiResponse<PageResponse<Book>>> getAllBookByPostId(
+            @PathVariable("postId") int pid,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "2") int size,
+            @RequestParam(value = "sort", defaultValue = "BookName") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection) {
+
+        PageResponse<Book> books = bookService.getAllBookByPostId(page, size, sortBy, sortDirection,pid);
+        ApiResponse<PageResponse<Book>> apiResponse = ApiResponse.<PageResponse<Book>>builder()
+                .code(200)
+                .message(ErrorCode.SUCCESS.getMessage())
+                .result(books)
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @GetMapping("/get-all")
+    public ResponseEntity<ApiResponse<PageResponse<Book>>> getAllBookActive(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "2") int size,
+            @RequestParam(value = "sort", defaultValue = "BookName") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection) {
+
+        PageResponse<Book> books = bookService.getAllBookActive(page, size, sortBy, sortDirection);
+        ApiResponse<PageResponse<Book>> apiResponse = ApiResponse.<PageResponse<Book>>builder()
+                .code(200)
+                .message(ErrorCode.SUCCESS.getMessage())
+                .result(books)
+                .build();
+        return ResponseEntity.ok(apiResponse);
     }
 }

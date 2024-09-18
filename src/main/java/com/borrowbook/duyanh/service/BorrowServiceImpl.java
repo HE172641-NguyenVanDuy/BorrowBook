@@ -135,6 +135,8 @@ public class BorrowServiceImpl implements BorrowService {
     @Scheduled(cron = "0 0 0 * * *")
     public void scanBorrowsForExpiration() {
         LocalDate today = LocalDate.now();
+
+        // Trước hạn 3 ngày sẽ gửi mail để remind
         LocalDate warningDate = today.plusDays(3);
 
         List<Borrow> borrows = borrowRepository.findBorrowsNearExpiration(warningDate);
@@ -149,7 +151,7 @@ public class BorrowServiceImpl implements BorrowService {
         List<BorrowDetail> overdueBorrows = borrowRepository.findOverdueBorrows(today);
         for (Borrow b : borrows) {
             try {
-                sendReminderEmail(b.getUser().getInformationOfUser().getEmail(), b, false);
+                sendReminderEmail(b.getUser().getInformationOfUser().getEmail(), b, true);
             } catch (MessagingException e) {
                 e.printStackTrace();
             }

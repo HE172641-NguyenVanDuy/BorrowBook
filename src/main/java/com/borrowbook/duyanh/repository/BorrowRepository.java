@@ -16,20 +16,20 @@ import java.util.List;
 @Repository
 public interface BorrowRepository extends JpaRepository<Borrow, Integer> {
 
-    @Query("SELECT b FROM Borrow b WHERE b.status LIKE 'BORROW' AND b.user_id = :uid ")
+    @Query("SELECT b FROM Borrow b WHERE b.status LIKE 'BORROW' AND b.user.id = :uid")
     List<Borrow> getAllBorrowActiveByUserId(@Param("uid") int uid);
 
-    @Query("SELECT bd FROM Borrow bd WHERE bd.borrow.expirationDate = :warningDate AND bd.status = 'BORROW'")
+    @Query("SELECT bd FROM Borrow bd WHERE bd.expirationDate = :warningDate AND bd.status = 'BORROW'")
     List<Borrow> findBorrowsNearExpiration(@Param("warningDate") LocalDate warningDate);
 
-    // Tìm các borrow đã quá hạn
-    @Query("SELECT bd FROM Borrow bd WHERE bd.borrow.expirationDate < :today AND bd.status = 'BORROW'")
+
+    @Query("SELECT bd FROM Borrow bd WHERE bd.expirationDate < :today AND bd.status = 'BORROW'")
     List<BorrowDetail> findOverdueBorrows(@Param("today")LocalDate today);
 
     @Query("SELECT b FROM Borrow b WHERE b.id = :id ")
     List<Borrow> getBorrowByBorrowId(@Param("id") int id);
 
-    @Query("SELECT b FROM Borrow b WHERE b.user_id = :uid")
+    @Query("SELECT b FROM Borrow b WHERE b.user.id = :uid")
     List<Borrow> getHistoryBorrowByUserId(@Param("uid") int uid);
 
     @Query(value = "SELECT * FROM Borrow\n" +

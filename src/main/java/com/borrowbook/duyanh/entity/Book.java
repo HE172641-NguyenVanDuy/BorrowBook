@@ -1,5 +1,6 @@
 package com.borrowbook.duyanh.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import lombok.*;
@@ -7,6 +8,7 @@ import org.apache.poi.hpsf.Decimal;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "Book")
@@ -23,7 +25,7 @@ public class Book {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(name = "bookname", length = 100)
+    @Column(name = "book_name", length = 100)
     private String bookName;
 
     @Column(name = "release_date")
@@ -50,4 +52,12 @@ public class Book {
     @JoinColumn(name = "category_id")
     private Category category;
 
+    @JsonIgnore
+    @ManyToMany
+    @JoinTable(
+            name = "book_post",
+            joinColumns = @JoinColumn(name = "book_id"),
+            inverseJoinColumns = @JoinColumn(name = "post_id")
+    )
+    private List<Post> posts;
 }

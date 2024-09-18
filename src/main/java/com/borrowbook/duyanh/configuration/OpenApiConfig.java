@@ -23,7 +23,6 @@ public class OpenApiConfig {
         return new OpenAPI().info(new Info().title(title).version(version).description(description)
                 .license(new License().name("API License").url("http://domain.vn/license")))
                 .servers(List.of(new Server().url(serverUrl).description(serverName)));
-
     }
 
     @Bean

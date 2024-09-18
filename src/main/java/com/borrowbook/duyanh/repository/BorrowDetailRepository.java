@@ -10,13 +10,13 @@ import java.util.List;
 @Repository
 public interface BorrowDetailRepository extends JpaRepository<BorrowDetail, Integer> {
 
-    @Query("SELECT b FROM BorrowDetail b WHERE b.borrow_id = :id ")
+    @Query("SELECT b FROM BorrowDetail b WHERE b.borrow.id = :id ")
     List<BorrowDetail> getAllBorrowDetailByBorrowId(@Param("id") int borrowId);
 
-    @Query("SELECT b FROM BorrowDetail b WHERE b.borrow_id = :id AND b.status = 'BORROW' ")
+    @Query("SELECT b FROM BorrowDetail b WHERE b.borrow.id = :id AND b.status = 'BORROW' ")
     List<BorrowDetail> getBorrowDetailBorrowByBorrowId(@Param("id") int borrowId);
 
-    @Query("SELECT b FROM BorrowDetail b WHERE b.borrow_id = :id AND b.status = 'RETURNED' ")
+    @Query("SELECT b FROM BorrowDetail b WHERE b.borrow.id = :id AND b.status = 'RETURNED' ")
     List<BorrowDetail> getBorrowDetailReturnedByBorrowId(@Param("id") int borrowId);
 
     @Query("UPDATE BorrowDetail b SET b.status = 'RETURNED' WHERE b.id = :id ")

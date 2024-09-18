@@ -1,5 +1,6 @@
 package com.borrowbook.duyanh.repository;
 
+import com.borrowbook.duyanh.dto.request.SearchUserDTO;
 import com.borrowbook.duyanh.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +19,19 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 //    User getUserById(int id);
 
     boolean existsByUsername(String username);
+
+    @Query("SELECT u FROM User u " +
+            "JOIN u.informationOfUser i " +
+            "JOIN u.role r " +
+            "WHERE (:username IS NULL OR u.username LIKE %:username%) " +
+            "AND (:phoneNumber IS NULL OR i.phoneNumber LIKE %:phoneNumber%) " +
+            "AND (:email IS NULL OR i.email LIKE %:email%) " +
+            "AND (:roleName IS NULL OR r.roleName LIKE %:roleName%)")
+    Page<User> searchUsers(@Param("username") String username,
+                           @Param("phoneNumber") String phoneNumber,
+                           @Param("email") String email,
+                           @Param("roleName") String roleName,
+                           Pageable pageable);
 
     @Query("SELECT s  FROM User s WHERE s.status LIKE 'ACTIVE' ")
     Page<User> getAllUserActive(Pageable pageable);

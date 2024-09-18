@@ -1,9 +1,10 @@
 package com.borrowbook.duyanh.controller;
 
+import com.borrowbook.duyanh.dto.request.SearchUserDTO;
 import com.borrowbook.duyanh.dto.request.UserDTO;
 import com.borrowbook.duyanh.dto.response.ApiResponse;
 import com.borrowbook.duyanh.dto.response.PageResponse;
-import com.borrowbook.duyanh.entity.Category;
+import com.borrowbook.duyanh.dto.response.UserResponse;
 import com.borrowbook.duyanh.entity.User;
 import com.borrowbook.duyanh.exception.AppException;
 import com.borrowbook.duyanh.exception.ErrorCode;
@@ -12,7 +13,6 @@ import com.borrowbook.duyanh.utils.ExportUsersExcel;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,9 +31,9 @@ public class UserController {
     private ExportUsersExcel exportUsersExcel;
 
     @GetMapping("/get-user/{id}")
-    public ResponseEntity<ApiResponse<User>> getUserById(@PathVariable("id") int id) {
-        User user = userService.getUserById(id);
-        ApiResponse<User> apiResponse = ApiResponse.<User>builder()
+    public ResponseEntity<ApiResponse<UserResponse>> getUserById(@PathVariable("id") int id) {
+        UserResponse user = userService.getUserById(id);
+        ApiResponse<UserResponse> apiResponse = ApiResponse.<UserResponse>builder()
                 .code(200)
                 .message(ErrorCode.USER_RETRIEVED.getMessage())
                 .result(user)
@@ -42,9 +42,9 @@ public class UserController {
     }
 
     @PostMapping("/create-user")
-    public ResponseEntity<ApiResponse<User>> createUser(@RequestBody @Valid UserDTO userDTO) {
-        User user = userService.createUser(userDTO);
-        ApiResponse<User> apiResponse = ApiResponse.<User>builder()
+    public ResponseEntity<ApiResponse<UserResponse>> createUser(@RequestBody @Valid UserDTO userDTO) {
+        UserResponse user = userService.createUser(userDTO);
+        ApiResponse<UserResponse> apiResponse = ApiResponse.<UserResponse>builder()
                 .code(200)
                 .message(ErrorCode.USER_CREATED.getMessage())
                 .result(user)
@@ -53,9 +53,11 @@ public class UserController {
     }
 
     @PutMapping("/update-user/{userId}")
-    public ResponseEntity<ApiResponse<User>> updateUser(@RequestBody @Valid UserDTO userDTO, @PathVariable("{userId}") int id) {
-        User user = userService.updateUser(userDTO, id);
-        ApiResponse<User> apiResponse = ApiResponse.<User>builder()
+    public ResponseEntity<ApiResponse<UserResponse>> updateUser(@RequestBody @Valid UserDTO userDTO,
+                                                                @PathVariable("{userId}") int id) {
+
+        UserResponse user = userService.updateUser(userDTO, id);
+        ApiResponse<UserResponse> apiResponse = ApiResponse.<UserResponse>builder()
                 .code(200)
                 .message(ErrorCode.USER_UPDATED.getMessage())
                 .result(user)
@@ -64,12 +66,14 @@ public class UserController {
     }
 
     @GetMapping("/get-all-active")
-    public ResponseEntity<ApiResponse<PageResponse<User>>> getAllUserActive(@RequestParam(value = "page", defaultValue = "1") int page,
-                                                                            @RequestParam(value = "size", defaultValue = "2") int size,
-                                                                            @RequestParam(value = "sort", defaultValue = "username") String sortBy,
-                                                                            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection) {
-        PageResponse<User> users = userService.getAllUserActive(page, size, sortBy, sortDirection);
-        ApiResponse<PageResponse<User>> apiResponse = ApiResponse.<PageResponse<User>>builder()
+    public ResponseEntity<ApiResponse<PageResponse<UserResponse>>> getAllUserActive(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "2") int size,
+            @RequestParam(value = "sort", defaultValue = "username") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection) {
+
+        PageResponse<UserResponse> users = userService.getAllUserActive(page, size, sortBy, sortDirection);
+        ApiResponse<PageResponse<UserResponse>> apiResponse = ApiResponse.<PageResponse<UserResponse>>builder()
                 .code(200)
                 .message(ErrorCode.USER_RETRIEVED.getMessage())
                 .result(users)
@@ -78,12 +82,14 @@ public class UserController {
     }
 
     @GetMapping("/get-all-delete")
-    public ResponseEntity<ApiResponse<PageResponse<User>>> getAllUserDelete(@RequestParam(value = "page", defaultValue = "1") int page,
-                                                                            @RequestParam(value = "size", defaultValue = "2") int size,
-                                                                            @RequestParam(value = "sort", defaultValue = "username") String sortBy,
-                                                                            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection) {
-        PageResponse<User> users = userService.getAllUserDeleted(page, size, sortBy, sortDirection);
-        ApiResponse<PageResponse<User>> apiResponse = ApiResponse.<PageResponse<User>>builder()
+    public ResponseEntity<ApiResponse<PageResponse<UserResponse>>> getAllUserDelete(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "2") int size,
+            @RequestParam(value = "sort", defaultValue = "username") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection) {
+
+        PageResponse<UserResponse> users = userService.getAllUserDeleted(page, size, sortBy, sortDirection);
+        ApiResponse<PageResponse<UserResponse>> apiResponse = ApiResponse.<PageResponse<UserResponse>>builder()
                 .code(200)
                 .message(ErrorCode.USER_RETRIEVED.getMessage())
                 .result(users)
@@ -92,12 +98,14 @@ public class UserController {
     }
 
     @GetMapping("/get-all-banned")
-    public ResponseEntity<ApiResponse<PageResponse<User>>> getAllUserBanned(@RequestParam(value = "page", defaultValue = "1") int page,
-                                                                            @RequestParam(value = "size", defaultValue = "2") int size,
-                                                                            @RequestParam(value = "sort", defaultValue = "username") String sortBy,
-                                                                            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection) {
-        PageResponse<User> users = userService.getAllUserBanned(page, size, sortBy, sortDirection);
-        ApiResponse<PageResponse<User>> apiResponse = ApiResponse.<PageResponse<User>>builder()
+    public ResponseEntity<ApiResponse<PageResponse<UserResponse>>> getAllUserBanned(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "2") int size,
+            @RequestParam(value = "sort", defaultValue = "username") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection) {
+
+        PageResponse<UserResponse> users = userService.getAllUserBanned(page, size, sortBy, sortDirection);
+        ApiResponse<PageResponse<UserResponse>> apiResponse = ApiResponse.<PageResponse<UserResponse>>builder()
                 .code(200)
                 .message(ErrorCode.USER_RETRIEVED.getMessage())
                 .result(users)
@@ -105,12 +113,29 @@ public class UserController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @PostMapping("/search_user")
+    public ResponseEntity<ApiResponse<PageResponse<UserResponse>>> searchUser(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "2") int size,
+            @RequestParam(value = "sort", defaultValue = "username") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestBody SearchUserDTO dto) {
+
+        PageResponse<UserResponse> seachUser = userService.searchUser(page,size,sortBy,sortDirection,dto);
+        ApiResponse<PageResponse<UserResponse>> apiResponse = ApiResponse.<PageResponse<UserResponse>>builder()
+                .code(200)
+                .message(ErrorCode.USER_RETRIEVED.getMessage())
+                .result(seachUser)
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
+
     @PatchMapping("/active-user/{id}")
-    public ResponseEntity<ApiResponse<Category>> activeUser(@PathVariable("id") int id) {
+    public ResponseEntity<ApiResponse<User>> activeUser(@PathVariable("id") int id) {
         if (!userService.activeUserById(id)) {
             throw new AppException(ErrorCode.ERROR);
         }
-        ApiResponse<Category> apiResponse = ApiResponse.<Category>builder()
+        ApiResponse<User> apiResponse = ApiResponse.<User>builder()
                 .code(200)
                 .message(ErrorCode.SUCCESS.getMessage())
                 .build();
@@ -118,11 +143,11 @@ public class UserController {
     }
 
     @PatchMapping("/delete-user/{id}")
-    public ResponseEntity<ApiResponse<Category>> deleteUser(@PathVariable("id") int id) {
+    public ResponseEntity<ApiResponse<User>> deleteUser(@PathVariable("id") int id) {
         if (!userService.deleteUserById(id)) {
             throw new AppException(ErrorCode.ERROR);
         }
-        ApiResponse<Category> apiResponse = ApiResponse.<Category>builder()
+        ApiResponse<User> apiResponse = ApiResponse.<User>builder()
                 .code(200)
                 .message(ErrorCode.SUCCESS.getMessage())
                 .build();
@@ -130,11 +155,11 @@ public class UserController {
     }
 
     @PatchMapping("/ban-user/{id}")
-    public ResponseEntity<ApiResponse<Category>> banUser(@PathVariable("id") int id) {
+    public ResponseEntity<ApiResponse<User>> banUser(@PathVariable("id") int id) {
         if (!userService.banUserById(id)) {
             throw new AppException(ErrorCode.ERROR);
         }
-        ApiResponse<Category> apiResponse = ApiResponse.<Category>builder()
+        ApiResponse<User> apiResponse = ApiResponse.<User>builder()
                 .code(200)
                 .message(ErrorCode.SUCCESS.getMessage())
                 .build();

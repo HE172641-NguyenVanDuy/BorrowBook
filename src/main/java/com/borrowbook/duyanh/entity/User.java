@@ -44,7 +44,11 @@ public class User {
     private InformationOfUser informationOfUser;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "User")
+    @OneToMany(mappedBy = "user")
     private List<Borrow> borrows;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "user")
+    private List<Post> posts;
 
 }

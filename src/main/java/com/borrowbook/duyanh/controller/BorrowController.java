@@ -50,8 +50,7 @@ public class BorrowController {
     }
 
     @PatchMapping("/return-book/{bdId}")
-    public ResponseEntity<ApiResponse<BorrowDetail>> returningBook(
-    @PathVariable("bdId") int bdId) {
+    public ResponseEntity<ApiResponse<BorrowDetail>> returningBook(@PathVariable("bdId") int bdId) {
         if(!borrowDetailService.returningBook( bdId)) {
             throw new  AppException(ErrorCode.ERROR);
         }
@@ -74,9 +73,11 @@ public class BorrowController {
     }
 
     @GetMapping("/get-all-borrow")
-    public ResponseEntity<ApiResponse<PageResponse<Borrow>>> getAllBorrow(@RequestParam(value = "page", defaultValue = "1") int page,
-                                                                            @RequestParam(value = "size", defaultValue = "2") int size,
-                                                                            @RequestParam(value = "sortOrder", defaultValue = "desc") String sortOrder) {
+    public ResponseEntity<ApiResponse<PageResponse<Borrow>>> getAllBorrow(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "2") int size,
+            @RequestParam(value = "sortOrder", defaultValue = "desc") String sortOrder) {
+
         PageResponse<Borrow> borrows = borrowService.getBorrowActive(page, size, sortOrder);
         ApiResponse<PageResponse<Borrow>> apiResponse = ApiResponse.<PageResponse<Borrow>>builder()
                 .code(200)

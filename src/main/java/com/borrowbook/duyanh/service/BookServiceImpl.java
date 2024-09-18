@@ -1,12 +1,19 @@
 package com.borrowbook.duyanh.service;
 
 import com.borrowbook.duyanh.dto.request.BookCreationRequest;
+import com.borrowbook.duyanh.dto.response.PageResponse;
 import com.borrowbook.duyanh.entity.Book;
+import com.borrowbook.duyanh.entity.Borrow;
 import com.borrowbook.duyanh.entity.Category;
+import com.borrowbook.duyanh.entity.User;
 import com.borrowbook.duyanh.exception.ErrorCode;
 import com.borrowbook.duyanh.repository.BookRepository;
 import com.borrowbook.duyanh.repository.CategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -78,17 +85,99 @@ public class BookServiceImpl implements BookService{
     }
 
     @Override
-    public List<Book> getAllBookActive() {
-        return bookRepository.getAllBookActive();
+    public PageResponse<Book> getAllBookActive(int page, int size, String sortBy, String sortDirection) {
+        Sort.Direction direction;
+        try {
+            direction = Sort.Direction.fromString(sortDirection);
+        } catch (IllegalArgumentException e) {
+            direction = Sort.Direction.ASC; // Giá trị mặc định nếu có lỗi
+        }
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(direction,sortBy));
+        var pageData = bookRepository.getAllBookActive(pageable);
+        return PageResponse.<Book>builder()
+                .currentPage(page)
+                .pageSize(pageData.getSize())
+                .totalPages(pageData.getTotalPages())
+                .totalElement(pageData.getTotalElements())
+                .data(pageData.stream().toList())
+                .build();
     }
 
     @Override
-    public List<Book> getAllDeleteBook() {
-        return bookRepository.getAllDeleteBook();
+    public PageResponse<Book> getAllDeleteBook(int page, int size, String sortBy, String sortDirection) {
+        Sort.Direction direction;
+        try {
+            direction = Sort.Direction.fromString(sortDirection);
+        } catch (IllegalArgumentException e) {
+            direction = Sort.Direction.ASC; // Giá trị mặc định nếu có lỗi
+        }
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(direction,sortBy));
+        var pageData = bookRepository.getAllDeleteBook(pageable);
+        return PageResponse.<Book>builder()
+                .currentPage(page)
+                .pageSize(pageData.getSize())
+                .totalPages(pageData.getTotalPages())
+                .totalElement(pageData.getTotalElements())
+                .data(pageData.stream().toList())
+                .build();
     }
 
     @Override
-    public List<Book> getAllBookByCategoryId(int categoryId) {
-        return bookRepository.getAllBookByCategoryId(categoryId);
+    public PageResponse<Book> getAllBookByCategoryId(int page, int size, String sortBy, String sortDirection, int categoryId) {
+        Sort.Direction direction;
+        try {
+            direction = Sort.Direction.fromString(sortDirection);
+        } catch (IllegalArgumentException e) {
+            direction = Sort.Direction.ASC; // Giá trị mặc định nếu có lỗi
+        }
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(direction,sortBy));
+        var pageData = bookRepository.getAllBookByCategoryId(categoryId,pageable);
+        return PageResponse.<Book>builder()
+                .currentPage(page)
+                .pageSize(pageData.getSize())
+                .totalPages(pageData.getTotalPages())
+                .totalElement(pageData.getTotalElements())
+                .data(pageData.stream().toList())
+                .build();
     }
+
+    @Override
+    public PageResponse<Book> getAllBookByPostId(int page, int size, String sortBy, String sortDirection, int pid) {
+        Sort.Direction direction;
+        try {
+            direction = Sort.Direction.fromString(sortDirection);
+        } catch (IllegalArgumentException e) {
+            direction = Sort.Direction.ASC;
+        }
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(direction,sortBy));
+        var pageData = bookRepository.getAllBookByPostId(pid,pageable);
+        return PageResponse.<Book>builder()
+                .currentPage(page)
+                .pageSize(pageData.getSize())
+                .totalPages(pageData.getTotalPages())
+                .totalElement(pageData.getTotalElements())
+                .data(pageData.stream().toList())
+                .build();
+    }
+
+
+//    @Override
+//    public PageResponse<Book> getAllBookByPostId(int size, int page, String sortOrder) {
+//        Sort sort = Sort.by("expiration_date");
+//
+//    }
+
+//    @Override
+//    public PageResponse<Book> getAllBookByPostId(int page, int size, int sortOrder) {
+//        Sort sort = Sort.by("expiration_date");
+//        if ("DESC".equalsIgnoreCase(sortOrder)) {
+//            sort = sort.descending();
+//        } else {
+//            sort = sort.ascending();
+//        }
+//
+//        Pageable pageable = PageRequest.of(page - 1, size, sort);
+//
+//        Page<Borrow> pageData = borrowRepository.getBorrowActive(pageable);
+//    }
 }
