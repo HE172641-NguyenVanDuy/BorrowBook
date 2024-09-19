@@ -8,6 +8,7 @@ import com.borrowbook.duyanh.exception.ErrorCode;
 import com.borrowbook.duyanh.repository.BookRepository;
 import com.borrowbook.duyanh.repository.BorrowDetailRepository;
 import com.borrowbook.duyanh.repository.BorrowRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Service
+@Slf4j
 public class BorrowDetailServiceImpl implements BorrowDetailService {
 
     private final BorrowDetailRepository borrowDetailRepository;

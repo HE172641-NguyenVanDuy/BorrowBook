@@ -9,8 +9,8 @@ import com.borrowbook.duyanh.entity.User;
 import com.borrowbook.duyanh.exception.ErrorCode;
 import com.borrowbook.duyanh.repository.BookRepository;
 import com.borrowbook.duyanh.repository.CategoryRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -18,9 +18,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
+@Slf4j
 public class BookServiceImpl implements BookService{
 
     private BookRepository bookRepository;
@@ -161,23 +160,4 @@ public class BookServiceImpl implements BookService{
     }
 
 
-//    @Override
-//    public PageResponse<Book> getAllBookByPostId(int size, int page, String sortOrder) {
-//        Sort sort = Sort.by("expiration_date");
-//
-//    }
-
-//    @Override
-//    public PageResponse<Book> getAllBookByPostId(int page, int size, int sortOrder) {
-//        Sort sort = Sort.by("expiration_date");
-//        if ("DESC".equalsIgnoreCase(sortOrder)) {
-//            sort = sort.descending();
-//        } else {
-//            sort = sort.ascending();
-//        }
-//
-//        Pageable pageable = PageRequest.of(page - 1, size, sort);
-//
-//        Page<Borrow> pageData = borrowRepository.getBorrowActive(pageable);
-//    }
 }

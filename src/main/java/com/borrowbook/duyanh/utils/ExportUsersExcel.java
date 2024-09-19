@@ -14,33 +14,35 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 //import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.sql.Time;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.borrowbook.duyanh.utils.Constants.*;
 
 @Component
 public class ExportUsersExcel {
 
+    private static final Logger log = LoggerFactory.getLogger(ExportUsersExcel.class);
     @Autowired
     private UserRepository userRepository;
 
@@ -90,83 +92,235 @@ public class ExportUsersExcel {
         outputStream.close();
     }
 
-    public void saveExcelData(String filePath) {
-        //List<Category> list = new ArrayList<>();
-
-       // BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder(12);
-        try {
-            FileInputStream fis = new FileInputStream(filePath);
-
-            Workbook workbook;
-            if(filePath.endsWith(".xls")) {
-                workbook = new HSSFWorkbook(fis);
-            } else if(filePath.endsWith(".xlsx")) {
-                workbook = new XSSFWorkbook(fis);
-            } else {
-                throw new IllegalArgumentException("Unsupported file format");
-            }
+    public void importExcel(HttpServletResponse response, String filePath) {
+        HashMap<String,List<Integer>> emailMap = new HashMap<>();
+        List<String> existingEmails = informationOfUserRepository.findAllEmail();
+        boolean hasDuplicates = false;
+        String fileName = new File(filePath).getName();
+        try (FileInputStream fis = new FileInputStream(filePath)) {
+            Workbook workbook = new XSSFWorkbook(fis);
             Sheet sheet = workbook.getSheetAt(0);
-            for(Row r: sheet) {
-                if(r.getRowNum() == 0) {
+
+            for (Row row : sheet) {
+                if (row.getRowNum() == 0) {
                     continue;
                 }
-                User user = new User();
-                InformationOfUser informationOfUser = new InformationOfUser();
-                if (r.getCell(0).getCellType() == CellType.STRING) {
-                    String username = r.getCell(0).getStringCellValue();
-                    if(checkUsername(username,r) )
-                    user.setUsername(username);
-                }
 
+                Cell emailCell = row.getCell(3);
+                if (emailCell != null && emailCell.getCellType() == CellType.STRING) {
+                    String email = emailCell.getStringCellValue();
+
+                    if (emailMap.containsKey(email)) {
+                        hasDuplicates = true;
+
+                        List<Integer> duplicatedRows = emailMap.get(email);
+
+                        Cell duplicateInfoCell = row.createCell(7);
+                        duplicateInfoCell.setCellValue("Duplicated in rows: " + duplicatedRows.stream()
+                                .map(Object::toString)
+                                .collect(Collectors.joining(", ")));
+
+                        duplicatedRows.add(row.getRowNum() + 1);
+                    } else {
+                        List<Integer> rows = new ArrayList<>();
+                        rows.add(row.getRowNum() + 1);
+                        emailMap.put(email, rows);
+                    }
+                    if (existingEmails.contains(email)) {
+                        hasDuplicates = true;
+                        Cell duplicateInfoCell = row.createCell(7);
+                        duplicateInfoCell.setCellValue("Duplicated in database");
+                    }
+                }
+            }
+            if (hasDuplicates) {
+                exportExcelWithDuplicates(response, workbook);
+            } else {
+                saveExcelData(sheet);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void exportExcelWithDuplicates(HttpServletResponse response, Workbook workbook) throws IOException {
+        LocalDateTime now = LocalDateTime.now();
+
+        response.setContentType("application/octet-stream");
+        response.setHeader("Content-Disposition", "attachment; filename=duplicatedExcel.xlsx");
+
+        ServletOutputStream outputStream = response.getOutputStream();
+        workbook.write(outputStream);
+        workbook.close();
+        outputStream.close();
+
+        System.out.println("File Excel có email trùng lặp đã được xuất ra.");
+    }
+
+    private void saveExcelData(Sheet sheet) throws Exception {
+        for(Row r: sheet) {
+            if(r.getRowNum() == 0) {
+                continue;
+            }
+            User user = new User();
+            InformationOfUser informationOfUser = new InformationOfUser();
+            if (r.getCell(0).getCellType() == CellType.STRING) {
+                String username = r.getCell(0).getStringCellValue();
+                if(checkUsername(username,r) )
+                    user.setUsername(username);
+            }
+            Cell cell = r.getCell(1);
+            if(cell == null || cell.getCellType() == CellType.BLANK){
+                log.warn("Password is null");
+                user.setPassword(defaultPassword);
+                //user.setPassword(bCryptPasswordEncoder.encode(defaultPassword));
+            } else {
                 if(r.getCell(1).getCellType() == CellType.STRING) {
+                    log.info("Password is not null");
                     String password = r.getCell(1).getStringCellValue();
                     if (checkPassword(password,r))
                         //user.setPassword(bCryptPasswordEncoder.encode(password));
                         user.setPassword(password);
-                } else {
-                    user.setPassword(defaultPassword);
-                    //user.setPassword(bCryptPasswordEncoder.encode(defaultPassword));
                 }
-                if (r.getCell(2).getCellType() == CellType.STRING) {
-                    String phoneNumber = r.getCell(2).getStringCellValue();
-                    if(checkPhoneNumber(phoneNumber,r)) {
-                        informationOfUser.setPhoneNumber(phoneNumber);
-                    }
-                }
-                if (r.getCell(3).getCellType() == CellType.STRING) {
-                    String email = r.getCell(3).getStringCellValue();
-                    if(checkEmail(email,r)) {
-                        informationOfUser.setEmail(email);
-                    }
-                }
-                if (r.getCell(4).getCellType() == CellType.STRING) {
-                    String dob = r.getCell(4).getStringCellValue();
-                    if(validateDateOfBirth(dob)!= null) {
-                        informationOfUser.setDob( validateDateOfBirth(dob));
-                    }
-                }
-                if (r.getCell(5).getCellType() == CellType.STRING) {
-                    String status = r.getCell(5).getStringCellValue();
-                    if(!getStatusUser(status).isEmpty()) user.setStatus(getStatusUser(status));
-                }
-                if (r.getCell(6).getCellType() == CellType.STRING) {
-                    String roleName = r.getCell(6).getStringCellValue();
-                    if(getRoleByRoleName(roleName)!= null) {
-                        user.setRole(getRoleByRoleName(roleName));
-                    }
-                }
-                User userSaved = userRepository.save(user);
-                informationOfUser.setUserId(userSaved.getId());
-                informationOfUserRepository.save(informationOfUser);
-
-                //list.add(category);
             }
-            //categoryRepository.saveAll(list);
+            Cell phoneNumberCell = r.getCell(2);
+            if (phoneNumberCell != null) {
+                String phoneNumber;
+                if (phoneNumberCell.getCellType() == CellType.STRING) {
+                    phoneNumber = phoneNumberCell.getStringCellValue();
+                } else if (phoneNumberCell.getCellType() == CellType.NUMERIC) {
+                    phoneNumber = String.valueOf((long) phoneNumberCell.getNumericCellValue());
+                } else {
+                    phoneNumber = "";
+                }
+                if (phoneNumber.startsWith("'")) {
+                    phoneNumber = phoneNumber.substring(1);
+                }
 
-        } catch (Exception e) {
-             e.printStackTrace();
+                log.info("Phone Number: " + phoneNumber);
+                if (checkPhoneNumber(phoneNumber, r)) {
+                    informationOfUser.setPhoneNumber(phoneNumber);
+                }
+            } else {
+                log.warn("Phone Number Cell is null.");
+            }
+
+            // Email
+            Cell emailCell = r.getCell(3);
+            if (emailCell != null && emailCell.getCellType() == CellType.STRING) {
+                String email = emailCell.getStringCellValue();
+                if (checkEmail(email, r)) {
+                    informationOfUser.setEmail(email);
+                }
+            }
+
+            // Date of Birth
+            Cell dobCell = r.getCell(4);
+            if (dobCell != null) {
+                if (dobCell.getCellType() == CellType.STRING) {
+                    String dob = dobCell.getStringCellValue();
+                    log.info(dob);
+                    if (validateDateOfBirth(dob) != null) {
+                        informationOfUser.setDob(validateDateOfBirth(dob));
+                    }
+                } else if (dobCell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(dobCell)) {
+
+                    Date dobDate = dobCell.getDateCellValue();
+                    log.info(dobDate.toString());
+                    if (dobDate != null) {
+                        informationOfUser.setDob(dobDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+                    }
+                }
+            }
+            if (r.getCell(5).getCellType() == CellType.STRING) {
+                String status = r.getCell(5).getStringCellValue();
+                if(!getStatusUser(status).isEmpty()) user.setStatus(getStatusUser(status));
+            }
+            if (r.getCell(6).getCellType() == CellType.STRING) {
+                String roleName = r.getCell(6).getStringCellValue();
+                if(getRoleByRoleName(roleName)!= null) {
+                    user.setRole(getRoleByRoleName(roleName));
+                }
+            }
+
+            User userSaved = userRepository.save(user);
+            informationOfUser.setUser(userSaved);
+            informationOfUserRepository.save(informationOfUser);
         }
     }
+
+//    public void importExcel(HttpServletResponse response, String filePath) {
+//        HashMap<String,List<Integer>> emailMap = new HashMap<>();
+//        Set<String> emailSet = new HashSet<>();
+//        List<String> existingEmails = informationOfUserRepository.findAllEmails();
+//        //List<Integer> listCount;
+//        int count = 1;
+//        boolean hasDuplicates = false;
+//
+//        try (FileInputStream fis = new FileInputStream(filePath)) {
+//            Workbook workbook = new XSSFWorkbook(fis);
+//            Sheet sheet = workbook.getSheetAt(0);
+//
+//            for (Row row : sheet) {
+//                if (row.getRowNum() == 0) {
+//                    continue;
+//                }
+//
+//                Cell emailCell = row.getCell(3);
+//                if (emailCell != null && emailCell.getCellType() == CellType.STRING) {
+//                    String email = emailCell.getStringCellValue();
+//
+//                    if (emailMap.containsKey(email)) {
+//                        hasDuplicates = true;
+//
+//                        // Lấy danh sách các dòng mà email đã xuất hiện
+//                        List<Integer> duplicatedRows = emailMap.get(email);
+//
+//                        // Ghi thông tin trùng lặp với các dòng đã xuất hiện
+//                        Cell duplicateInfoCell = row.createCell(7);
+//                        duplicateInfoCell.setCellValue("Duplicated in rows: " + duplicatedRows.stream()
+//                                .map(Object::toString)
+//                                .collect(Collectors.joining(", ")));
+//
+//                        // Thêm dòng hiện tại vào danh sách trùng lặp
+//                        duplicatedRows.add(row.getRowNum() + 1); // +1 để hiển thị số dòng cho người dùng
+//                    } else {
+//                        // Nếu chưa có email này, thêm email vào map và set
+//                        List<Integer> rows = new ArrayList<>();
+//                        rows.add(row.getRowNum() + 1); // Thêm dòng đầu tiên vào danh sách
+//                        emailMap.put(email, rows);
+//                    }
+//
+//                    if (!emailSet.add(email)) {
+//                        hasDuplicates = true;
+//                        //int duplicatedRow = emailMap.get(email);
+//                        Cell duplicateInfoCell = row.createCell(7);
+//                        duplicateInfoCell.setCellValue("Duplicated in row: " + duplicatedRow);
+//                    }
+//
+//                    if (existingEmails.contains(email)) {
+//                        hasDuplicates = true;
+//                        Cell duplicateInfoCell = row.createCell(7);
+//                        duplicateInfoCell.setCellValue("Duplicated in database");
+//                    }
+//                    count++;
+//                }
+//
+//            }
+//
+//            // Nếu có trùng lặp, xuất lại file Excel với thông tin cột 8
+//            if (hasDuplicates) {
+//                exportExcelWithDuplicates(response, workbook);
+//            } else {
+//                saveExcelData(sheet);
+//            }
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
+
+
 
     private boolean checkUsername(String username, Row r) throws Exception {
         if(username.length() >= 6 && username.length() <= 30 && username.matches("^[a-zA-Z0-9]+$")) {
@@ -193,11 +347,12 @@ public class ExportUsersExcel {
             return  true;
         } else throw new Exception("Dòng " + (r.getRowNum() + 1) + ", Cột 4: Email không hợp lệ.");
     }
-    private Date validateDateOfBirth(String dateOfBirth) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+    private LocalDate validateDateOfBirth(String dateOfBirth) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         try {
             LocalDate localDate = LocalDate.parse(dateOfBirth, formatter);
-            return (Date) Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant()); // Chuyển LocalDate thành Date
+            log.warn(""+ localDate);
+            return localDate; // Chuyển LocalDate thành Date
         } catch (DateTimeParseException e) {
             return null; // Ngày sinh không hợp lệ
         }
@@ -222,7 +377,7 @@ public class ExportUsersExcel {
             Role role = roleRepository.findByRoleName(roleName);
             return role;
         } else {
-            throw new IllegalArgumentException("Invalid user status: " + roleName); // Trạng thái không hợp lệ
+            throw new IllegalArgumentException("Invalid user status: " + roleName);
         }
     }
 

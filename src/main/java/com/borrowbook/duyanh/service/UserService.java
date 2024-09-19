@@ -24,4 +24,5 @@ public interface UserService {
     UserResponse createUser(UserDTO request);
     UserResponse updateUser(UserDTO request, int id);
     PageResponse<UserResponse> searchUser(int page, int size, String sortBy, String sortDirection, SearchUserDTO dto);
+    //User getMyInfo();
 }

@@ -8,13 +8,16 @@ import com.borrowbook.duyanh.exception.ErrorCode;
 import com.borrowbook.duyanh.repository.CommentRepository;
 import com.borrowbook.duyanh.repository.PostRepository;
 import com.borrowbook.duyanh.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Slf4j
 public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
@@ -47,6 +50,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Modifying
     public Comment updateComment(CommentDTO dto, long id) {
         Comment comment = getCommentById(id);
         comment.setContent(dto.getContent());

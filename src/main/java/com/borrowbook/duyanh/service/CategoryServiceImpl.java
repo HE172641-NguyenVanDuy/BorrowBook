@@ -5,13 +5,16 @@ import com.borrowbook.duyanh.entity.Category;
 import com.borrowbook.duyanh.exception.AppException;
 import com.borrowbook.duyanh.exception.ErrorCode;
 import com.borrowbook.duyanh.repository.CategoryRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Slf4j
 public class CategoryServiceImpl implements CategoryService {
 
     private CategoryRepository categoryRepository;
@@ -40,6 +43,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
+    @Modifying
     public Category updateCategory(CategoryCreationRequest categoryCreationRequest, int categoryId) {
         if(categoryRepository.existsCategoryActiveByCategoryName(categoryCreationRequest.getCategoryName()) != null
                 && categoryCreationRequest.getStatus().equalsIgnoreCase("ACTIVE")) {

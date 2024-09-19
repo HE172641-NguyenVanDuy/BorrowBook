@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 @Entity
@@ -30,7 +31,7 @@ public class InformationOfUser {
     private String phoneNumber;
 
     @Column(name = "dob")
-    private Date dob;
+    private LocalDate dob;
 
     @Id
     @Column(name = "user_id")

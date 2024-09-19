@@ -7,6 +7,7 @@ import com.borrowbook.duyanh.exception.AppException;
 import com.borrowbook.duyanh.exception.ErrorCode;
 import com.borrowbook.duyanh.repository.InformationOfUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -35,6 +36,7 @@ public class InformationOfUserServiceImpl implements InformationOfUserService{
     }
 
     @Override
+    @Modifying
     public InformationOfUser updateInformationOfUser(UserDTO dto, User user) {
         InformationOfUser informationOfUser = getInformationOfUserByUserId(user.getId());
         informationOfUser.setUser(user);

@@ -15,6 +15,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.Modifying;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,11 +35,12 @@ public class UserServiceImpl implements UserService{
     @Autowired
     private UserMapper userMapper;
 
-    //private final BCryptPasswordEncoder bCrypt  = new BCryptPasswordEncoder(12);
+//    @Autowired
+//    private PasswordEncoder bCrypt;
 
     @Override
     public UserResponse getUserById(int id) {
-        return userMapper.toUserResponse( userRepository.findById(id).orElseThrow(
+        return userMapper.toUserResponse(userRepository.findById(id).orElseThrow(
                 () -> new RuntimeException(ErrorCode.NOT_FOUND.getMessage())
         ));
     }
@@ -125,7 +128,7 @@ public class UserServiceImpl implements UserService{
             throw new AppException(ErrorCode.USER_EXISTED);
 
         User user = userMapper.toUser(request);
-
+        //user.setPassword(bCrypt.encode(request.getPassword()));
         User savedUser = userRepository.save(user);
         informationOfUserService.saveInformationOfUser(request,savedUser);
 
@@ -134,6 +137,7 @@ public class UserServiceImpl implements UserService{
 
     @Override
     @Transactional
+    @Modifying
     public UserResponse updateUser(UserDTO request, int id) {
         User user = userRepository.findById(id).orElseThrow(
                 () -> new RuntimeException(ErrorCode.NOT_FOUND.getMessage())
@@ -155,6 +159,7 @@ public class UserServiceImpl implements UserService{
                                                  String sortBy,
                                                  String sortDirection,
                                                  SearchUserDTO dto) {
+
         Pageable pageable = pagingDirection(page,size,sortBy,sortDirection);
         var pageData = userRepository.searchUsers(dto.getUsername(),
                 dto.getPhoneNumber(),
@@ -171,4 +176,13 @@ public class UserServiceImpl implements UserService{
                 .data(userResponseList)
                 .build();
     }
+
+//    @Override
+//    public User getMyInfo() {
+//        var context = SecurityContextHolder.getContext();
+//        String name = context.getAuthentication().getName();
+//        User user = userRepository.findByUsername(name).orElseThrow(
+//                () -> new AppException(ErrorCode.NOT_FOUND));
+//        return user;
+//    }
 }

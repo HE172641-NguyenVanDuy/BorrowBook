@@ -166,6 +166,17 @@ public class UserController {
         return ResponseEntity.ok(apiResponse);
     }
 
+//    @GetMapping("/my-info")
+//    public ResponseEntity<ApiResponse<User>> getMyInfo() {
+//        User user = userService.getMyInfo();
+//        ApiResponse<User> apiResponse = ApiResponse.<User>builder()
+//                .code(200)
+//                .result(user)
+//                .message(ErrorCode.SUCCESS.getMessage())
+//                .build();
+//        return ResponseEntity.ok(apiResponse);
+//    }
+
     @GetMapping(value = "/export-excel") //
     public void exportUsersToExcel(HttpServletResponse response) throws IOException {
         try {
@@ -184,21 +195,23 @@ public class UserController {
     }
 
     @PostMapping("/import-excel")
-    public String uploadExcel(@RequestParam("file") MultipartFile file) {
+    public String uploadExcel(@RequestParam("file") MultipartFile file, HttpServletResponse response) {
         try {
             // Tạo đường dẫn file tạm thời duy nhất
             String tempDir = System.getProperty("java.io.tmpdir");
-            String filePath = tempDir + UUID.randomUUID() + "_" + file.getOriginalFilename();
-
-            // Kiểm tra quyền truy cập trước khi ghi file
-            java.io.File tempFile = new java.io.File(filePath);
-            if (tempFile.exists()) {
-                return "Error: File already exists or is in use.";
-            }
+            String filePath = tempDir + java.io.File.separator + UUID.randomUUID() + "_" + file.getOriginalFilename();
 
             // Lưu file tạm thời trên server
+            java.io.File tempFile = new java.io.File(filePath);
             file.transferTo(tempFile);
-            exportUsersExcel.saveExcelData(filePath);
+
+            // Gọi phương thức xử lý file Excel
+            exportUsersExcel.importExcel(response, filePath);
+
+            // Xóa file tạm thời sau khi xử lý xong
+            if (tempFile.exists()) {
+                tempFile.delete();
+            }
             return "Data has been uploaded successfully.";
         } catch (IOException e) {
             return "Error uploading file: " + e.getMessage();

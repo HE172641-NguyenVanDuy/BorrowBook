@@ -13,6 +13,7 @@ import com.borrowbook.duyanh.repository.BorrowRepository;
 import com.borrowbook.duyanh.repository.UserRepository;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,11 +31,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@Slf4j
 public class BorrowServiceImpl implements BorrowService {
 
     private final BorrowRepository borrowRepository;
 
-    private final UserRepository userRepository;
+    private final UserService userService;
+    @Autowired
+    private UserRepository userRepository;
 
     private final BorrowDetailRepository borrowDetailRepository;
 
@@ -44,12 +48,12 @@ public class BorrowServiceImpl implements BorrowService {
 
     @Autowired
     public BorrowServiceImpl(BorrowRepository borrowRepository,
-                             UserRepository userRepository,
+                             UserService userService,
                              BorrowDetailRepository borrowDetailRepository,
                              BookService bookService,
                              JavaMailSender mailSender) {
         this.borrowRepository = borrowRepository;
-        this.userRepository = userRepository;
+        this.userService = userService;
         this.borrowDetailRepository = borrowDetailRepository;
         this.bookService = bookService;
         this.mailSender = mailSender;
@@ -60,8 +64,10 @@ public class BorrowServiceImpl implements BorrowService {
     public Borrow borrowingBook(BorrowDTO dto) {
         Borrow borrow = new Borrow();
         BorrowDetail borrowDetail = new BorrowDetail();
-        User user = userRepository.findById(4).orElseThrow(
-                () -> new RuntimeException(ErrorCode.NOT_FOUND.getMessage()));
+        //User user = userService.getMyInfo();
+        User user = userRepository.findById(dto.getUserId()).orElseThrow(
+                () -> new AppException(ErrorCode.NOT_FOUND)
+        );
 
         if ("BAN".equalsIgnoreCase(user.getStatus())) {
             throw new AppException(ErrorCode.USER_BANNED);

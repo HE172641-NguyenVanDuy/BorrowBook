@@ -4,6 +4,7 @@ import com.borrowbook.duyanh.validation.annotation.Unique;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 @AllArgsConstructor
@@ -39,7 +40,7 @@ public class UserDTO {
 
     @NotNull(message = "Date of birth is mandatory")
     @Past(message = "Date of birth must be in the past")
-    private Date dob;
+    private LocalDate dob;
 
     @NotNull(message = "Role of user can not be null.")
     private int rid;
