@@ -10,8 +10,14 @@ import java.util.List;
 @Repository
 public interface InformationOfUserRepository extends JpaRepository<InformationOfUser,Integer> {
 
+    @Query("SELECT i.phoneNumber FROM InformationOfUser i")
+    List<String> findAllPhoneNumber();
+
+
+
     @Query("SELECT i.email FROM InformationOfUser i")
     List<String> findAllEmail();
+
     public boolean existsByPhoneNumber(String phoneNumber);
     public boolean existsByEmail(String email);
 }
