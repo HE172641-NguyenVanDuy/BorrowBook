@@ -42,4 +42,7 @@ public interface BorrowRepository extends JpaRepository<Borrow, Integer> {
             "    YEAR(borrow_date) DESC, MONTH(borrow_date) DESC ",
             nativeQuery = true)
     Page<Borrow> getBorrowActive(Pageable pageable);
+
+    @Query("SELECT b FROM Borrow b WHERE b.user.id LIKE :uid AND b.status = :status")
+    boolean existsByUserAndStatus(@Param("uid") User user,@Param("status") String status);
 }

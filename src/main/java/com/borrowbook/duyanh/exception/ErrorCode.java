@@ -4,6 +4,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 
 public enum ErrorCode {
+    ONGOING_BORROWINGS(1008,"You already have ongoing borrowings.",HttpStatus.BAD_REQUEST),
+    BOOK_LIMIT_EXCEEDED(1008, "You can only borrow up to 5 books.",HttpStatus.BAD_REQUEST),
     UNAUTHORIZED(1008,"You do not have permission",HttpStatus.FORBIDDEN),
     USER_BANNED(1006, "Your account has been banned", HttpStatus.FORBIDDEN),  // 403 Forbidden
     ENOUGH_BOOK(1007, "Not enough book available!", HttpStatus.BAD_REQUEST),  // 400 Bad Request

@@ -29,6 +29,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -58,13 +59,33 @@ public class BorrowServiceImpl implements BorrowService {
         this.bookService = bookService;
         this.mailSender = mailSender;
     }
+    private void checkBookLimit(Map<Integer, Integer> books) {
+        int totalBooks = books.values().stream().mapToInt(Integer::intValue).sum();
+
+        if (totalBooks > 5) {
+            throw new AppException(ErrorCode.BOOK_LIMIT_EXCEEDED);
+        }
+    }
+
+    private void checkOngoingBorrowings(User user) {
+
+        boolean hasOngoingBorrowings = borrowRepository.existsByUserAndStatus(user, "BORROW");
+
+        if (hasOngoingBorrowings) {
+            throw new AppException(ErrorCode.ONGOING_BORROWINGS);
+        }
+    }
+
 
     @Override
     @Transactional
     public Borrow borrowingBook(BorrowDTO dto) {
+        LocalDate date = LocalDate.now();
         Borrow borrow = new Borrow();
-        BorrowDetail borrowDetail = new BorrowDetail();
-        //User user = userService.getMyInfo();
+        checkBookLimit(dto.getBooks());
+        checkOngoingBorrowings(userRepository.findById(dto.getUserId()).orElseThrow(
+                () -> new RuntimeException(ErrorCode.NOT_FOUND.getMessage())));
+
         User user = userRepository.findById(dto.getUserId()).orElseThrow(
                 () -> new AppException(ErrorCode.NOT_FOUND)
         );
@@ -72,32 +93,38 @@ public class BorrowServiceImpl implements BorrowService {
         if ("BAN".equalsIgnoreCase(user.getStatus())) {
             throw new AppException(ErrorCode.USER_BANNED);
         }
-        for (int id : dto.getBookIds()) {
-            Book book = bookService.getBookById(id);
-            if (book.getQuantity() < dto.getQuantity()) {
+
+        borrow.setBorrowDate(date);
+        borrow.setStatus("BORROW");
+        borrow.setExpirationDate(dto.getExpirationDate());
+        borrow.setUser(user);
+
+        Borrow savedBorrow = borrowRepository.save(borrow);
+
+        for (Map.Entry<Integer, Integer> entry : dto.getBooks().entrySet()) {
+            int bookId = entry.getKey();
+            int quantity = entry.getValue();
+
+            Book book = bookService.getBookById(bookId);
+            if (book.getQuantity() < quantity) {
                 throw new AppException(ErrorCode.ENOUGH_BOOK);
             }
-            LocalDate date = LocalDate.now();
-            borrow.setBorrowDate(date);
-            borrow.setStatus("BORROW");
-            borrow.setExpirationDate(dto.getExpirationDate());
-            borrow.setUser(user);
-            try {
-                Borrow savedBorrow = borrowRepository.save(borrow);
-                borrowDetail.setBorrow(savedBorrow);
-                borrowDetail.setBook(book);
-                borrowDetail.setQuantity(dto.getQuantity());
-                borrowDetail.setBookName(book.getBookName());
-                borrowDetail.setCompositionPrice(book.getPrice());
-                borrowDetail.setDescription(dto.getDescription());
-                borrowDetail.setStatus("BORROW");
-                borrowDetailRepository.save(borrowDetail);
-                book.setQuantity(book.getQuantity() - dto.getQuantity());
-            } catch (Exception e) {
-                throw new AppException(ErrorCode.ERROR);
-            }
+
+            BorrowDetail borrowDetail = new BorrowDetail();
+            borrowDetail.setBorrow(savedBorrow);
+            borrowDetail.setBook(book);
+            borrowDetail.setQuantity(quantity);
+            borrowDetail.setBookName(book.getBookName());
+            borrowDetail.setCompositionPrice(book.getPrice());
+            borrowDetail.setDescription(dto.getDescription());
+            borrowDetail.setStatus("BORROW");
+
+            borrowDetailRepository.save(borrowDetail);
+
+            book.setQuantity(book.getQuantity() - quantity);
         }
-        return borrow;
+
+        return savedBorrow;
     }
 
     @Override
@@ -139,7 +166,7 @@ public class BorrowServiceImpl implements BorrowService {
     }
 
     @Scheduled(cron = "0 0 0 * * *")
-    public void scanBorrowsForExpiration() {
+    private void scanBorrowsForExpiration() {
         LocalDate today = LocalDate.now();
 
         // Trước hạn 3 ngày sẽ gửi mail để remind
@@ -165,7 +192,7 @@ public class BorrowServiceImpl implements BorrowService {
     }
 
     @Transactional
-    public void sendReminderEmail(String email, Borrow borrow, boolean isOverdue) throws MessagingException {
+    private void sendReminderEmail(String email, Borrow borrow, boolean isOverdue) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
         List<BorrowDetail> updatedDetails = new ArrayList<>();
