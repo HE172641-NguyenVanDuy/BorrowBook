@@ -21,6 +21,4 @@ public class PostDTO {
     @NotNull(message = "Content is mandatory.")
     String content;
 
-    @NotNull(message = "User's id is mandatory.")
-    int uid;
 }

@@ -4,6 +4,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 
 public enum ErrorCode {
+    UNAUTHENTICATED(1006,"Unauthenticated",HttpStatus.NOT_FOUND),
+    USER_NOT_EXITED(1006, "User not existed", HttpStatus.BAD_REQUEST),
     ONGOING_BORROWINGS(1008,"You already have ongoing borrowings.",HttpStatus.BAD_REQUEST),
     BOOK_LIMIT_EXCEEDED(1008, "You can only borrow up to 5 books.",HttpStatus.BAD_REQUEST),
     UNAUTHORIZED(1008,"You do not have permission",HttpStatus.FORBIDDEN),

@@ -19,7 +19,4 @@ public class CommentDTO {
 
     @NotNull(message = "Post's identify is mandatory.")
     long postId;
-
-    //@NotNull(message = "User's identify is mandatory.")
-    int uid;
 }

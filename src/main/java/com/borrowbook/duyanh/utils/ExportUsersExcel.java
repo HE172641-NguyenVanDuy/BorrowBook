@@ -18,6 +18,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 //import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,6 +46,9 @@ public class ExportUsersExcel {
     private UserRepository userRepository;
 
     @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
     private InformationOfUserRepository informationOfUserRepository;
 
     @Autowired
@@ -55,6 +60,7 @@ public class ExportUsersExcel {
     public ExportUsersExcel() {
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public void generateExcel(HttpServletResponse response) throws IOException {
         List<User> usersList = userRepository.findAll();
         XSSFWorkbook workbook = new XSSFWorkbook();
@@ -89,6 +95,7 @@ public class ExportUsersExcel {
         outputStream.close();
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @Transactional
     public void importExcel(HttpServletResponse response, String filePath) {
         HashMap<String, List<Integer>> emailMap = new HashMap<>();
@@ -170,18 +177,6 @@ public class ExportUsersExcel {
             errorMsg.append("User name is null!\n");
         }
 
-//        Cell usernameCell = row.getCell(0);
-//        if (usernameCell != null && usernameCell.getCellType() == CellType.STRING) {
-//            String username = usernameCell.getStringCellValue();
-//            log.info("Username is :" + username);
-//            if (!checkUsername(username)) {
-//                errorMsg.append("Username is in the wrong format!\r\n");
-//            }
-//        } else {
-//            errorMsg.append("Username is null !\r\n");
-//            log.warn("Username is null !");
-//        }
-
         Cell passwordCell = row.getCell(1);
         if (passwordCell != null) {
             String password = "";
@@ -200,7 +195,7 @@ public class ExportUsersExcel {
             }
         } else log.warn("Password is null !");
 
-        Cell phoneNumberCell = row.getCell(0);
+        Cell phoneNumberCell = row.getCell(2);
         if (phoneNumberCell != null && phoneNumberCell.getCellType() == CellType.STRING) {
             String phoneNumber = usernameCell.getStringCellValue();
             if (!checkPhoneNumber(phoneNumber)) {
@@ -222,16 +217,6 @@ public class ExportUsersExcel {
         } else {
             errorMsg.append("Phone number is null!\n");
         }
-//        Cell phoneNumberCell = row.getCell(2);
-//        if (phoneNumberCell != null) {
-//            if (phoneNumberCell.getCellType() == CellType.STRING) {
-//                String phoneNumber = phoneNumberCell.getStringCellValue();
-//                System.out.println("PhoneNumber: " + phoneNumber);
-//            }
-//        } else {
-//            errorMsg.append("Phone number is null !\r\n");
-//            log.warn("Phone number is null !");
-//        }
 
         Cell emailCell = row.getCell(3);
         if (emailCell != null && emailCell.getCellType() == CellType.STRING) {
@@ -343,8 +328,8 @@ public class ExportUsersExcel {
             Cell cell = r.getCell(1);
             if (cell == null || cell.getCellType() == CellType.BLANK) {
                 log.warn("Password is null");
-                user.setPassword(defaultPassword);
-                //user.setPassword(bCryptPasswordEncoder.encode(defaultPassword));
+
+                user.setPassword(passwordEncoder.encode(defaultPassword));
             } else {
                 String password = "";
                 log.info("Password is not null");
@@ -353,8 +338,8 @@ public class ExportUsersExcel {
                 } else if (cell.getCellType() == CellType.NUMERIC) {
                     password = String.valueOf((long) cell.getNumericCellValue());
                 }
-                //user.setPassword(bCryptPasswordEncoder.encode(password));
-                user.setPassword(password);
+                user.setPassword(passwordEncoder.encode(password));
+
             }
 
             Cell phoneNumberCell = r.getCell(2);
@@ -423,19 +408,16 @@ public class ExportUsersExcel {
 
     private boolean validateDateOfBirth(Date dateOfBirth) {
         try {
-            // Chuyển đổi Date thành LocalDate
             LocalDate localDate = dateOfBirth.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
-            // Kiểm tra định dạng ngày
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
             String formattedDate = localDate.format(formatter);
 
-            // Chuyển đổi lại thành LocalDate để kiểm tra tính hợp lệ
             LocalDate.parse(formattedDate, formatter);
 
-            return true; // Ngày hợp lệ
+            return true;
         } catch (Exception e) {
-            return false; // Ngày không hợp lệ
+            return false;
         }
     }
 

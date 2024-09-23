@@ -22,6 +22,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,6 +60,7 @@ public class BorrowServiceImpl implements BorrowService {
         this.bookService = bookService;
         this.mailSender = mailSender;
     }
+
     private void checkBookLimit(Map<Integer, Integer> books) {
         int totalBooks = books.values().stream().mapToInt(Integer::intValue).sum();
 
@@ -69,26 +71,22 @@ public class BorrowServiceImpl implements BorrowService {
 
     private void checkOngoingBorrowings(User user) {
 
-        boolean hasOngoingBorrowings = borrowRepository.existsByUserAndStatus(user, "BORROW");
+        boolean hasOngoingBorrowings = borrowRepository.existsByUserAndStatus(user.getId(), "BORROW");
 
         if (hasOngoingBorrowings) {
             throw new AppException(ErrorCode.ONGOING_BORROWINGS);
         }
     }
 
-
     @Override
     @Transactional
     public Borrow borrowingBook(BorrowDTO dto) {
         LocalDate date = LocalDate.now();
         Borrow borrow = new Borrow();
+        User user = userService.getMyInfo();
         checkBookLimit(dto.getBooks());
-        checkOngoingBorrowings(userRepository.findById(dto.getUserId()).orElseThrow(
-                () -> new RuntimeException(ErrorCode.NOT_FOUND.getMessage())));
 
-        User user = userRepository.findById(dto.getUserId()).orElseThrow(
-                () -> new AppException(ErrorCode.NOT_FOUND)
-        );
+        checkOngoingBorrowings(user);
 
         if ("BAN".equalsIgnoreCase(user.getStatus())) {
             throw new AppException(ErrorCode.USER_BANNED);
@@ -127,6 +125,7 @@ public class BorrowServiceImpl implements BorrowService {
         return savedBorrow;
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'LIBRARIAN')")
     @Override
     public List<Borrow> getAllBorrowActiveByUserId(int uid) {
         return borrowRepository.getAllBorrowActiveByUserId(uid);
@@ -143,6 +142,7 @@ public class BorrowServiceImpl implements BorrowService {
         return borrowRepository.getHistoryBorrowByUserId(id);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'LIBRARIAN')")
     @Override
     public PageResponse<Borrow> getBorrowActive(int page, int size, String sortOrder) {
         Sort sort = Sort.by("expiration_date");
@@ -166,7 +166,7 @@ public class BorrowServiceImpl implements BorrowService {
     }
 
     @Scheduled(cron = "0 0 0 * * *")
-    private void scanBorrowsForExpiration() {
+    public void scanBorrowsForExpiration() {
         LocalDate today = LocalDate.now();
 
         // Trước hạn 3 ngày sẽ gửi mail để remind
@@ -214,7 +214,9 @@ public class BorrowServiceImpl implements BorrowService {
         for (BorrowDetail detail : borrowDetail) {
             LocalDate expirationDate = detail.getBorrow().getExpirationDate();
             long daysLate = isOverdue ? expirationDate.until(LocalDate.now()).getDays() : 0;
-            BigDecimal lateFee = isOverdue ? BigDecimal.valueOf(10000L).multiply(BigDecimal.valueOf(daysLate)).multiply(BigDecimal.valueOf(detail.getQuantity())) : BigDecimal.ZERO;
+            BigDecimal lateFee = isOverdue ? BigDecimal.valueOf(10000L)
+                    .multiply(BigDecimal.valueOf(daysLate))
+                    .multiply(BigDecimal.valueOf(detail.getQuantity())) : BigDecimal.ZERO;
             detail.setCompositionPrice(lateFee);
             updatedDetails.add(detail);
 

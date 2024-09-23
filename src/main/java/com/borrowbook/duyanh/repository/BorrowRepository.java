@@ -43,6 +43,7 @@ public interface BorrowRepository extends JpaRepository<Borrow, Integer> {
             nativeQuery = true)
     Page<Borrow> getBorrowActive(Pageable pageable);
 
-    @Query("SELECT b FROM Borrow b WHERE b.user.id LIKE :uid AND b.status = :status")
-    boolean existsByUserAndStatus(@Param("uid") User user,@Param("status") String status);
+    @Query("SELECT COUNT(b) > 0 FROM Borrow b WHERE b.user.id = :uid AND b.status = :status")
+    boolean existsByUserAndStatus(@Param("uid") int userId, @Param("status") String status);
+
 }

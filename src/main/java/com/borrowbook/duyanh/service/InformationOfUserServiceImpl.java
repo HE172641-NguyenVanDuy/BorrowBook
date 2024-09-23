@@ -52,25 +52,4 @@ public class InformationOfUserServiceImpl implements InformationOfUserService{
         repository.saveAndFlush(informationOfUser);
         return informationOfUser;
     }
-
-
-//    @Override
-//    public InformationOfUser saveInformationOfUser(InformationOfUserDTO dto) {
-//        InformationOfUser informationOfUser = new InformationOfUser();
-//        informationOfUser.setUserId(dto.getUserId());
-//        informationOfUser.setDob(dto.getDob());
-//        informationOfUser.setEmail(dto.getEmail());
-//        informationOfUser.setPhoneNumber(dto.getPhoneNumber());
-//        return repository.save(informationOfUser);
-//    }
-//
-//    @Override
-//    public InformationOfUser updateInformationOfUser(InformationOfUserDTO dto, int id) {
-//        InformationOfUser informationOfUser = getInformationOfUserById(id);
-//        informationOfUser.setUserId(dto.getUserId());
-//        informationOfUser.setDob(dto.getDob());
-//        informationOfUser.setEmail(dto.getEmail());
-//        informationOfUser.setPhoneNumber(dto.getPhoneNumber());
-//        return repository.saveAndFlush(informationOfUser);
-//    }
 }

@@ -15,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +34,7 @@ public class BookServiceImpl implements BookService{
 
     @Transactional
     @Override
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public Book createdBook(BookCreationRequest request) {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new RuntimeException(ErrorCode.NOT_FOUND.getMessage()));
@@ -57,6 +59,7 @@ public class BookServiceImpl implements BookService{
     @Transactional
     @Modifying
     @Override
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public Book updateBook(BookCreationRequest request, int id) {
         Book book = getBookById(id);
         Category category = categoryRepository.findById(request.getCategoryId())
@@ -72,16 +75,19 @@ public class BookServiceImpl implements BookService{
         return bookRepository.saveAndFlush(book);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Transactional
     @Override
     public boolean deleteBookById(int id) {
         return bookRepository.deleteBookByBookId(id) > 0;
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Override
     public boolean activeBookById(int id) {
         return bookRepository.activeBookById(id) > 0;
     }
+
 
     @Override
     public PageResponse<Book> getAllBookActive(int page, int size, String sortBy, String sortDirection) {
@@ -102,6 +108,7 @@ public class BookServiceImpl implements BookService{
                 .build();
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Override
     public PageResponse<Book> getAllDeleteBook(int page, int size, String sortBy, String sortDirection) {
         Sort.Direction direction;
@@ -123,13 +130,7 @@ public class BookServiceImpl implements BookService{
 
     @Override
     public PageResponse<Book> getAllBookByCategoryId(int page, int size, String sortBy, String sortDirection, int categoryId) {
-        Sort.Direction direction;
-        try {
-            direction = Sort.Direction.fromString(sortDirection);
-        } catch (IllegalArgumentException e) {
-            direction = Sort.Direction.ASC; // Giá trị mặc định nếu có lỗi
-        }
-        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(direction,sortBy));
+        Pageable pageable = paging(page,size,sortBy,sortDirection,categoryId);
         var pageData = bookRepository.getAllBookByCategoryId(categoryId,pageable);
         return PageResponse.<Book>builder()
                 .currentPage(page)
@@ -142,13 +143,8 @@ public class BookServiceImpl implements BookService{
 
     @Override
     public PageResponse<Book> getAllBookByPostId(int page, int size, String sortBy, String sortDirection, int pid) {
-        Sort.Direction direction;
-        try {
-            direction = Sort.Direction.fromString(sortDirection);
-        } catch (IllegalArgumentException e) {
-            direction = Sort.Direction.ASC;
-        }
-        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(direction,sortBy));
+
+        Pageable pageable = paging(page,size,sortBy,sortDirection,pid);
         var pageData = bookRepository.getAllBookByPostId(pid,pageable);
         return PageResponse.<Book>builder()
                 .currentPage(page)
@@ -157,6 +153,18 @@ public class BookServiceImpl implements BookService{
                 .totalElement(pageData.getTotalElements())
                 .data(pageData.stream().toList())
                 .build();
+    }
+
+
+    private Pageable paging(int page, int size, String sortBy, String sortDirection, int pid) {
+        Sort.Direction direction;
+        try {
+            direction = Sort.Direction.fromString(sortDirection);
+        } catch (IllegalArgumentException e) {
+            direction = Sort.Direction.ASC;
+        }
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(direction,sortBy));
+        return pageable;
     }
 
 

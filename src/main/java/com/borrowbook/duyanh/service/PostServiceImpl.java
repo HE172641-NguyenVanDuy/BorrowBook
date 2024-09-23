@@ -14,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,36 +25,39 @@ import java.util.List;
 public class PostServiceImpl implements PostService{
 
     private final PostRepository postRepository;
-    private final UserRepository userRepository;
 
     @Autowired
-    public PostServiceImpl(PostRepository postRepository, UserRepository userRepository) {
+    private UserService userService;
+
+    @Autowired
+    public PostServiceImpl(PostRepository postRepository) {
         this.postRepository = postRepository;
-        this.userRepository = userRepository;
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     @Override
     @Transactional
     public Post createPost(PostDTO postDTO) {
         Post post = new Post();
         post.setCreateDate(LocalDateTime.now());
-        User user = userRepository.findById(postDTO.getUid()).orElseThrow(()-> new AppException(ErrorCode.NOT_FOUND));
+        User user = userService.getMyInfo();
         post.setUser(user);
         post.setContent(postDTO.getContent());
         return postRepository.save(post);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     @Override
     @Transactional
     public Post updatePost(PostDTO postDTO, long id) {
         Post post = getPostById(id);
-        //post.setCreateDate(LocalDateTime.now());
-        User user = userRepository.findById(postDTO.getUid()).orElseThrow(()-> new AppException(ErrorCode.NOT_FOUND));
+        User user = userService.getMyInfo();
         post.setUser(user);
         post.setContent(postDTO.getContent());
         return postRepository.saveAndFlush(post);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     @Override
     @Transactional
     public boolean deletePost(Post post) {

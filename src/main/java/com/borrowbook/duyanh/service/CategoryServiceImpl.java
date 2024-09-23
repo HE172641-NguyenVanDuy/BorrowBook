@@ -8,6 +8,7 @@ import com.borrowbook.duyanh.repository.CategoryRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,13 +25,14 @@ public class CategoryServiceImpl implements CategoryService {
         this.categoryRepository = categoryRepository;
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Override
     @Transactional
     public Category createCategory(CategoryCreationRequest categoryCreationRequest) {
-        if(categoryRepository.existsCategoryActiveByCategoryName(categoryCreationRequest.getCategoryName()) != null
-        && categoryCreationRequest.getStatus().equalsIgnoreCase("ACTIVE")) {
+        if (categoryRepository.existsCategoryActiveByCategoryName(categoryCreationRequest.getCategoryName()) != null
+                && categoryCreationRequest.getStatus().equalsIgnoreCase("ACTIVE")) {
             throw new AppException(ErrorCode.EXISTED_CATEGORY_NAME);
-        } else if(categoryRepository.existsCategoryActiveByCategoryName(categoryCreationRequest.getCategoryName()) != null
+        } else if (categoryRepository.existsCategoryActiveByCategoryName(categoryCreationRequest.getCategoryName()) != null
                 && categoryCreationRequest.getStatus().equalsIgnoreCase("DELETE")) {
             throw new AppException(ErrorCode.CATEGORY_EXIST_DELETED);
         }
@@ -41,14 +43,15 @@ public class CategoryServiceImpl implements CategoryService {
         return categoryRepository.save(category);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Override
     @Transactional
     @Modifying
     public Category updateCategory(CategoryCreationRequest categoryCreationRequest, int categoryId) {
-        if(categoryRepository.existsCategoryActiveByCategoryName(categoryCreationRequest.getCategoryName()) != null
+        if (categoryRepository.existsCategoryActiveByCategoryName(categoryCreationRequest.getCategoryName()) != null
                 && categoryCreationRequest.getStatus().equalsIgnoreCase("ACTIVE")) {
             throw new AppException(ErrorCode.EXISTED_CATEGORY_NAME);
-        } else if(categoryRepository.existsCategoryActiveByCategoryName(categoryCreationRequest.getCategoryName()) != null
+        } else if (categoryRepository.existsCategoryActiveByCategoryName(categoryCreationRequest.getCategoryName()) != null
                 && categoryCreationRequest.getStatus().equalsIgnoreCase("DELETE")) {
             throw new AppException(ErrorCode.CATEGORY_EXIST_DELETED);
         }
@@ -64,6 +67,7 @@ public class CategoryServiceImpl implements CategoryService {
         return categoryRepository.getAllCategoryActive();
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Override
     public List<Category> getAllCategoryDelete() {
         return categoryRepository.getAllCategoryDelete();
@@ -75,6 +79,7 @@ public class CategoryServiceImpl implements CategoryService {
                 .orElseThrow(() -> new RuntimeException(String.valueOf(ErrorCode.EXISTED_CATEGORY_NAME)));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public boolean deleteCategoryById(int cid) {
         int affectedCategories = categoryRepository.deleteCategory(cid);
         if (affectedCategories > 0) {
@@ -84,6 +89,7 @@ public class CategoryServiceImpl implements CategoryService {
         return false;
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Override
     public boolean activeCategory(int cid) {
         return categoryRepository.activeCategory(cid) > 0;

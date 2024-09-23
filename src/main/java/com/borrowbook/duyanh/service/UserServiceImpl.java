@@ -17,6 +17,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.Modifying;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,8 +38,8 @@ public class UserServiceImpl implements UserService{
     @Autowired
     private UserMapper userMapper;
 
-//    @Autowired
-//    private PasswordEncoder bCrypt;
+    @Autowired
+    private PasswordEncoder bCrypt;
 
     @Override
     public UserResponse getUserById(int id) {
@@ -45,6 +48,7 @@ public class UserServiceImpl implements UserService{
         ));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'LIBRARIAN')")
     @Override
     public PageResponse<UserResponse> getAllUserActive(int page, int size, String sortBy, String sortDirection) {
         Pageable pageable = pagingDirection(page,size,sortBy,sortDirection);
@@ -59,6 +63,7 @@ public class UserServiceImpl implements UserService{
                 .build();
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @Override
     public PageResponse<UserResponse> getAllUserDeleted(int page, int size, String sortBy, String sortDirection) {
         Pageable pageable = pagingDirection(page,size,sortBy,sortDirection);
@@ -73,6 +78,7 @@ public class UserServiceImpl implements UserService{
                 .build();
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'LIBRARIAN')")
     @Override
     public PageResponse<UserResponse>  getAllUserBanned(int page, int size, String sortBy, String sortDirection) {
         Pageable pageable = pagingDirection(page,size,sortBy,sortDirection);
@@ -99,24 +105,28 @@ public class UserServiceImpl implements UserService{
         return pageable;
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'LIBRARIAN')")
     @Override
     @Transactional
     public boolean activeUserById(int id) {
         return userRepository.activeUserById(id) > 0;
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @Override
     @Transactional
     public boolean deleteUserById(int id) {
         return userRepository.deleteUserById(id) > 0;
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'LIBRARIAN')")
     @Override
     @Transactional
     public boolean banUserById(int id) {
         return userRepository.banUserById(id) > 0;
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @Override
     @Transactional
     public UserResponse createUser(UserDTO request) {
@@ -128,13 +138,14 @@ public class UserServiceImpl implements UserService{
             throw new AppException(ErrorCode.USER_EXISTED);
 
         User user = userMapper.toUser(request);
-        //user.setPassword(bCrypt.encode(request.getPassword()));
+        user.setPassword(bCrypt.encode(request.getPassword()));
         User savedUser = userRepository.save(user);
         informationOfUserService.saveInformationOfUser(request,savedUser);
 
         return UserResponse.fromUser(savedUser);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @Override
     @Transactional
     @Modifying
@@ -177,12 +188,12 @@ public class UserServiceImpl implements UserService{
                 .build();
     }
 
-//    @Override
-//    public User getMyInfo() {
-//        var context = SecurityContextHolder.getContext();
-//        String name = context.getAuthentication().getName();
-//        User user = userRepository.findByUsername(name).orElseThrow(
-//                () -> new AppException(ErrorCode.NOT_FOUND));
-//        return user;
-//    }
+    @Override
+    public User getMyInfo() {
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        User user = userRepository.findByUsername(name).orElseThrow(
+                () -> new AppException(ErrorCode.NOT_FOUND));
+        return user;
+    }
 }
