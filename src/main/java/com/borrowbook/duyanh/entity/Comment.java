@@ -28,7 +28,6 @@ public class Comment {
     @Column(name = "content")
     String content;
 
-    //@Column(name = "user_id")
     @ManyToOne( cascade = {
             CascadeType.DETACH,
             CascadeType.MERGE,
@@ -37,7 +36,6 @@ public class Comment {
     @JoinColumn(name = "user_id")
     private User user;
 
-    //@Column(name = "post_id")
     @ManyToOne( cascade = {
             CascadeType.DETACH,
             CascadeType.MERGE,

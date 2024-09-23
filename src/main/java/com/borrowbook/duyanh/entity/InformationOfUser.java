@@ -16,12 +16,10 @@ import java.util.Date;
 @Builder
 public class InformationOfUser {
 
-
-
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @MapsId
     @JsonBackReference
-    @JoinColumn(name = "user_id") // Tên cột khóa ngoại
+    @JoinColumn(name = "user_id")
     private User user;
 
     @Column(name = "email")

@@ -22,7 +22,6 @@ public class BorrowDetail {
     @Column(name = "id")
     int id;
 
-    //@Column(name = "borrow_id")
     @ManyToOne( cascade = {
             CascadeType.DETACH,
             CascadeType.MERGE,
@@ -31,7 +30,6 @@ public class BorrowDetail {
     @JoinColumn(name = "borrow_id")
     Borrow borrow;
 
-    //@Column(name = "book_id")
     @ManyToOne( cascade = {
             CascadeType.DETACH,
             CascadeType.MERGE,

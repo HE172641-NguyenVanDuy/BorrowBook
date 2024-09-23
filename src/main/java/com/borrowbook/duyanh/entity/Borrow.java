@@ -41,8 +41,6 @@ public class Borrow {
     @Column(name = "total_composation_price")
     BigDecimal totalCompositionPrice;
 
-    //@Column(name = "user_id")
-    //@MapsId
     @ManyToOne( cascade = {
             CascadeType.DETACH,
             CascadeType.MERGE,
