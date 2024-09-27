@@ -1,6 +1,7 @@
 package com.borrowbook.duyanh.service;
 
 import com.borrowbook.duyanh.dto.request.CommentDTO;
+import com.borrowbook.duyanh.dto.response.ApiResponse;
 import com.borrowbook.duyanh.entity.Comment;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +16,7 @@ public interface CommentService {
 
     List<Comment> getAllCommentByPostId(long pid);
 
-    boolean deleteComment(long cid);
+    ApiResponse<String> deleteComment(long cid);
 
     Comment getCommentById(long id);
 }

@@ -1,5 +1,6 @@
 package com.borrowbook.duyanh.utils;
 
+import com.borrowbook.duyanh.dto.response.ApiResponse;
 import com.borrowbook.duyanh.entity.InformationOfUser;
 import com.borrowbook.duyanh.entity.Role;
 import com.borrowbook.duyanh.entity.User;
@@ -22,6 +23,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -60,8 +62,8 @@ public class ExportUsersExcel {
     public ExportUsersExcel() {
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
     public void generateExcel(HttpServletResponse response) throws IOException {
+        setUpResponse(response);
         List<User> usersList = userRepository.findAll();
         XSSFWorkbook workbook = new XSSFWorkbook();
         XSSFSheet sheet = workbook.createSheet("User list");
@@ -82,9 +84,16 @@ public class ExportUsersExcel {
             InformationOfUser informationOfUser = informationOfUserRepository.findById(u.getId()).orElseThrow(
                     () -> new RuntimeException(ErrorCode.NOT_FOUND.getMessage())
             );
-            dataRow.createCell(2).setCellValue(informationOfUser.getEmail());
-            dataRow.createCell(3).setCellValue(informationOfUser.getPhoneNumber());
-            dataRow.createCell(4).setCellValue(informationOfUser.getDob());
+            if (informationOfUser != null) {
+                dataRow.createCell(2).setCellValue(informationOfUser.getEmail());
+                dataRow.createCell(3).setCellValue(informationOfUser.getPhoneNumber());
+                dataRow.createCell(4).setCellValue(informationOfUser.getDob() != null ? informationOfUser.getDob().toString() : "N/A");
+            } else {
+                dataRow.createCell(2).setCellValue("N/A");
+                dataRow.createCell(3).setCellValue("N/A");
+                dataRow.createCell(4).setCellValue("N/A");
+            }
+
             dataRow.createCell(5).setCellValue(u.getStatus());
             dataRowIndex++;
         }
@@ -93,6 +102,44 @@ public class ExportUsersExcel {
         workbook.write(outputStream);
         workbook.close();
         outputStream.close();
+    }
+
+    public void setUpResponse(HttpServletResponse response) {
+        response.setContentType("application/octet-stream");
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment;filename=users.xlsx";
+        response.setHeader(headerKey, headerValue);
+    }
+
+    public ApiResponse<String> getTemporaryFileInServer(MultipartFile file, HttpServletResponse response) {
+        String msg = "";
+        try {
+
+            String tempDir = System.getProperty("java.io.tmpdir");
+            String filePath = tempDir + java.io.File.separator + UUID.randomUUID() + "_" + file.getOriginalFilename();
+
+            // Lưu file tạm thời trên server
+            java.io.File tempFile = new java.io.File(filePath);
+            file.transferTo(tempFile);
+
+            // Gọi phương thức xử lý file Excel
+            importExcel(response, filePath);
+
+            // Xóa file tạm thời sau khi xử lý xong
+            if (tempFile.exists()) {
+                tempFile.delete();
+            }
+            //Data has been uploaded successfully.
+            return ApiResponse.<String>builder()
+                    .code(200)
+                    .message("Data has been uploaded successfully.")
+                    .build();
+        } catch (IOException e) {
+            return ApiResponse.<String>builder()
+                    .code(200)
+                    .message("Error uploading file: " + e.getMessage())
+                    .build();
+        }
     }
 
     @PreAuthorize("hasAnyRole('ADMIN')")

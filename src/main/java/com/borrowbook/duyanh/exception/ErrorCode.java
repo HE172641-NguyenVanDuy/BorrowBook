@@ -4,6 +4,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 
 public enum ErrorCode {
+    DELETE_POST_SUCCESS(1010,"Delete post successfully!",HttpStatus.BAD_REQUEST),
+    DELETE_POST_FAIL(1010,"Delete post fail!",HttpStatus.BAD_REQUEST),
+    DELETE_COMMENT_SUCCESS(1009,"Delete comment successfully!",HttpStatus.BAD_REQUEST),
+    DELETE_COMMENT_FAIL(1009,"Delete comment fail!",HttpStatus.BAD_REQUEST),
     UNAUTHENTICATED(1006,"Unauthenticated",HttpStatus.NOT_FOUND),
     USER_NOT_EXITED(1006, "User not existed", HttpStatus.BAD_REQUEST),
     ONGOING_BORROWINGS(1008,"You already have ongoing borrowings.",HttpStatus.BAD_REQUEST),
@@ -20,6 +24,7 @@ public enum ErrorCode {
     USER_RETRIEVED(1006, "User retrieved successfully!", HttpStatus.OK),  // 200 OK
     SUCCESS(1002, "Successfully!", HttpStatus.OK),  // 200 OK
     NOT_FOUND(1005, "Not found!", HttpStatus.NOT_FOUND),  // 404 Not Found
+    NO_BOOK_DELETE(1005, "No book has been deleted!", HttpStatus.BAD_REQUEST),
     BOOK_ACTIVE(1005, "The book activated successfully!", HttpStatus.OK),  // 200 OK
     BOOK_DELETED(1005, "The book deleted successfully!", HttpStatus.OK),  // 200 OK
     BOOK_UPDATED(1005, "The book updated successfully!", HttpStatus.OK),  // 200 OK

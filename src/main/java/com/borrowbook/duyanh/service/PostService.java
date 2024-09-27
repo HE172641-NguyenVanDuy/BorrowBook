@@ -1,6 +1,7 @@
 package com.borrowbook.duyanh.service;
 
 import com.borrowbook.duyanh.dto.request.PostDTO;
+import com.borrowbook.duyanh.dto.response.ApiResponse;
 import com.borrowbook.duyanh.dto.response.PageResponse;
 import com.borrowbook.duyanh.entity.Post;
 import org.springframework.stereotype.Service;
@@ -14,7 +15,7 @@ public interface PostService {
 
     Post updatePost(PostDTO postDTO, long id);
 
-    boolean deletePost(Post post);
+    ApiResponse<String> deletePost(Post post);
 
     PageResponse<Post> getAllPostByBookId(int size, int page, String sortOrder, int bookId);
 

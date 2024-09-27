@@ -2,6 +2,7 @@ package com.borrowbook.duyanh.service;
 
 import com.borrowbook.duyanh.dto.request.SearchUserDTO;
 import com.borrowbook.duyanh.dto.request.UserDTO;
+import com.borrowbook.duyanh.dto.response.ApiResponse;
 import com.borrowbook.duyanh.dto.response.PageResponse;
 import com.borrowbook.duyanh.dto.response.UserResponse;
 import com.borrowbook.duyanh.entity.Role;
@@ -48,7 +49,6 @@ public class UserServiceImpl implements UserService{
         ));
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'LIBRARIAN')")
     @Override
     public PageResponse<UserResponse> getAllUserActive(int page, int size, String sortBy, String sortDirection) {
         Pageable pageable = pagingDirection(page,size,sortBy,sortDirection);
@@ -63,7 +63,6 @@ public class UserServiceImpl implements UserService{
                 .build();
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
     @Override
     public PageResponse<UserResponse> getAllUserDeleted(int page, int size, String sortBy, String sortDirection) {
         Pageable pageable = pagingDirection(page,size,sortBy,sortDirection);
@@ -78,7 +77,6 @@ public class UserServiceImpl implements UserService{
                 .build();
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'LIBRARIAN')")
     @Override
     public PageResponse<UserResponse>  getAllUserBanned(int page, int size, String sortBy, String sortDirection) {
         Pageable pageable = pagingDirection(page,size,sortBy,sortDirection);
@@ -105,28 +103,43 @@ public class UserServiceImpl implements UserService{
         return pageable;
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'LIBRARIAN')")
     @Override
     @Transactional
-    public boolean activeUserById(int id) {
-        return userRepository.activeUserById(id) > 0;
+    public ApiResponse<String> activeUserById(int id) {
+        if(!(userRepository.activeUserById(id) > 0)) {
+            throw new AppException(ErrorCode.ERROR);
+        }
+        return ApiResponse.<String>builder()
+                .code(200)
+                .message(ErrorCode.SUCCESS.getMessage())
+                .build();
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
     @Override
     @Transactional
-    public boolean deleteUserById(int id) {
-        return userRepository.deleteUserById(id) > 0;
+    public ApiResponse<String> deleteUserById(int id) {
+        if(!(userRepository.deleteUserById(id) > 0)) {
+            throw new AppException(ErrorCode.ERROR);
+        }
+        return ApiResponse.<String>builder()
+                .code(200)
+                .message(ErrorCode.SUCCESS.getMessage())
+                .build();
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'LIBRARIAN')")
+
     @Override
     @Transactional
-    public boolean banUserById(int id) {
-        return userRepository.banUserById(id) > 0;
+    public ApiResponse<String> banUserById(int id) {
+        if(!(userRepository.banUserById(id) > 0)) {
+            throw new AppException(ErrorCode.ERROR);
+        }
+        return ApiResponse.<String>builder()
+                .code(200)
+                .message(ErrorCode.SUCCESS.getMessage())
+                .build();
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
     @Override
     @Transactional
     public UserResponse createUser(UserDTO request) {
@@ -145,7 +158,6 @@ public class UserServiceImpl implements UserService{
         return UserResponse.fromUser(savedUser);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
     @Override
     @Transactional
     @Modifying

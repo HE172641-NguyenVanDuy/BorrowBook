@@ -1,6 +1,7 @@
 package com.borrowbook.duyanh.service;
 
 import com.borrowbook.duyanh.dto.request.CommentDTO;
+import com.borrowbook.duyanh.dto.response.ApiResponse;
 import com.borrowbook.duyanh.entity.Comment;
 import com.borrowbook.duyanh.entity.Post;
 import com.borrowbook.duyanh.entity.User;
@@ -70,14 +71,19 @@ public class CommentServiceImpl implements CommentService {
 
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     @Override
-    public boolean deleteComment(long cid) {
+    public ApiResponse<String> deleteComment(long cid) {
         Comment comment = getCommentById(cid);
+        String msg = "";
         try {
             commentRepository.delete(comment);
-            return true;
+            msg = ErrorCode.DELETE_COMMENT_SUCCESS.getMessage();
         } catch (Exception e) {
-            return false;
+            msg = ErrorCode.DELETE_COMMENT_FAIL.getMessage();
         }
+        return ApiResponse.<String>builder()
+                .code(200)
+                .result(msg)
+                .build();
     }
 
     @Override

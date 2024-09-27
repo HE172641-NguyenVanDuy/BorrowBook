@@ -142,28 +142,11 @@ public class BorrowServiceImpl implements BorrowService {
         return borrowRepository.getHistoryBorrowByUserId(id);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'LIBRARIAN')")
     @Override
-    public PageResponse<Borrow> getBorrowActive(int page, int size, String sortOrder) {
-        Sort sort = Sort.by("expiration_date");
-        if ("DESC".equalsIgnoreCase(sortOrder)) {
-            sort = sort.descending();
-        } else {
-            sort = sort.ascending();
-        }
-
-        Pageable pageable = PageRequest.of(page - 1, size, sort);
-
-        Page<Borrow> pageData = borrowRepository.getBorrowActive(pageable);
-
-        return PageResponse.<Borrow>builder()
-                .currentPage(page)
-                .pageSize(pageData.getSize())
-                .totalPages(pageData.getTotalPages())
-                .totalElement(pageData.getTotalElements())
-                .data(pageData.getContent())
-                .build();
+    public Borrow getBorrowActive() {
+        return borrowRepository.getBorrowActive();
     }
+
 
     @Scheduled(cron = "0 0 0 * * *")
     public void scanBorrowsForExpiration() {
@@ -181,8 +164,8 @@ public class BorrowServiceImpl implements BorrowService {
             }
         }
 
-        List<BorrowDetail> overdueBorrows = borrowRepository.findOverdueBorrows(today);
-        for (Borrow b : borrows) {
+        List<Borrow> overdueBorrows = borrowRepository.findOverdueBorrows(today);
+        for (Borrow b : overdueBorrows) {
             try {
                 sendReminderEmail(b.getUser().getInformationOfUser().getEmail(), b, true);
             } catch (MessagingException e) {

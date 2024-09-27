@@ -1,14 +1,13 @@
 package com.borrowbook.duyanh.service;
 
 import com.borrowbook.duyanh.dto.request.PostDTO;
+import com.borrowbook.duyanh.dto.response.ApiResponse;
 import com.borrowbook.duyanh.dto.response.PageResponse;
-import com.borrowbook.duyanh.entity.Borrow;
 import com.borrowbook.duyanh.entity.Post;
 import com.borrowbook.duyanh.entity.User;
 import com.borrowbook.duyanh.exception.AppException;
 import com.borrowbook.duyanh.exception.ErrorCode;
 import com.borrowbook.duyanh.repository.PostRepository;
-import com.borrowbook.duyanh.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -34,7 +33,7 @@ public class PostServiceImpl implements PostService{
         this.postRepository = postRepository;
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+
     @Override
     @Transactional
     public Post createPost(PostDTO postDTO) {
@@ -46,7 +45,6 @@ public class PostServiceImpl implements PostService{
         return postRepository.save(post);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     @Override
     @Transactional
     public Post updatePost(PostDTO postDTO, long id) {
@@ -57,17 +55,20 @@ public class PostServiceImpl implements PostService{
         return postRepository.saveAndFlush(post);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     @Override
     @Transactional
-    public boolean deletePost(Post post) {
+    public ApiResponse<String> deletePost(Post post) {
+        String msg = "";
         try {
             postRepository.delete(post);
-            return true;
+            msg = ErrorCode.DELETE_POST_FAIL.getMessage();
         } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+            msg = ErrorCode.DELETE_POST_FAIL.getMessage();
         }
+        return ApiResponse.<String>builder()
+                .code(200)
+                .result(msg)
+                .build();
     }
 
     @Override

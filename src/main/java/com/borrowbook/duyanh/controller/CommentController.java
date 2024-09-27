@@ -56,14 +56,8 @@ public class CommentController {
     }
 
     @DeleteMapping("delete-post/{pid}")
-    public ResponseEntity<ApiResponse<Comment>> deleteComment(@PathVariable("pid") long pid) {
-        if(!commentService.deleteComment(pid)) {
-            throw new RuntimeException(ErrorCode.ERROR.getMessage());
-        }
-        ApiResponse<Comment> apiResponse = ApiResponse.<Comment>builder()
-                .code(200)
-                .message(ErrorCode.SUCCESS.getMessage())
-                .build();
+    public ResponseEntity<ApiResponse<String>> deleteComment(@PathVariable("pid") long pid) {
+        ApiResponse<String> apiResponse = commentService.deleteComment(pid);
         return ResponseEntity.ok(apiResponse);
     }
 }

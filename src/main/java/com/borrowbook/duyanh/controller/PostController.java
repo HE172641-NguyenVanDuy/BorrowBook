@@ -10,6 +10,7 @@ import com.borrowbook.duyanh.service.PostService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,6 +24,7 @@ public class PostController {
         this.postService = postService;
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     @PostMapping("/create-post")
     public ResponseEntity<ApiResponse<Post>> createPost(@RequestBody @Valid PostDTO postDTO) {
         Post post = postService.createPost(postDTO);
@@ -34,6 +36,7 @@ public class PostController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     @PutMapping("/update-post/{userId}")
     public ResponseEntity<ApiResponse<Post>> updatePost(@PathVariable("userId") int id,
                                                         @RequestBody @Valid PostDTO postDTO ) {
@@ -46,16 +49,11 @@ public class PostController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     @DeleteMapping("/delete-post/{postId}")
-    public ResponseEntity<ApiResponse<Post>> deletePost(@PathVariable("postId") long id) {
+    public ResponseEntity<ApiResponse<String>> deletePost(@PathVariable("postId") long id) {
         Post post = postService.getPostById(id);
-        if(!postService.deletePost(post)) {
-            throw new RuntimeException(ErrorCode.ERROR.getMessage());
-        }
-        ApiResponse<Post> apiResponse = ApiResponse.<Post>builder()
-                .code(200)
-                .message(ErrorCode.SUCCESS.getMessage())
-                .build();
+        ApiResponse<String> apiResponse = postService.deletePost(post);
         return ResponseEntity.ok(apiResponse);
     }
 

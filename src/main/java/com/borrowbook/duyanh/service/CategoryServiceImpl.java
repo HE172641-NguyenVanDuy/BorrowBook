@@ -1,6 +1,7 @@
 package com.borrowbook.duyanh.service;
 
 import com.borrowbook.duyanh.dto.request.CategoryCreationRequest;
+import com.borrowbook.duyanh.dto.response.ApiResponse;
 import com.borrowbook.duyanh.entity.Category;
 import com.borrowbook.duyanh.exception.AppException;
 import com.borrowbook.duyanh.exception.ErrorCode;
@@ -25,7 +26,6 @@ public class CategoryServiceImpl implements CategoryService {
         this.categoryRepository = categoryRepository;
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Override
     @Transactional
     public Category createCategory(CategoryCreationRequest categoryCreationRequest) {
@@ -43,7 +43,6 @@ public class CategoryServiceImpl implements CategoryService {
         return categoryRepository.save(category);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Override
     @Transactional
     @Modifying
@@ -56,9 +55,15 @@ public class CategoryServiceImpl implements CategoryService {
             throw new AppException(ErrorCode.CATEGORY_EXIST_DELETED);
         }
         Category category = getCategoryById(categoryId);
-        category.setCategoryName(categoryCreationRequest.getCategoryName());
-        category.setStatus(categoryCreationRequest.getStatus());
+        if( !categoryCreationRequest.getCategoryName().isEmpty() &&
+            categoryCreationRequest.getCategoryName() != null) {
+            category.setCategoryName(categoryCreationRequest.getCategoryName());
+        }
 
+        if( !categoryCreationRequest.getStatus().isEmpty() &&
+                categoryCreationRequest.getStatus() != null) {
+            category.setStatus(categoryCreationRequest.getStatus());
+        }
         return categoryRepository.saveAndFlush(category);
     }
 
@@ -67,7 +72,6 @@ public class CategoryServiceImpl implements CategoryService {
         return categoryRepository.getAllCategoryActive();
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Override
     public List<Category> getAllCategoryDelete() {
         return categoryRepository.getAllCategoryDelete();
@@ -79,19 +83,34 @@ public class CategoryServiceImpl implements CategoryService {
                 .orElseThrow(() -> new RuntimeException(String.valueOf(ErrorCode.EXISTED_CATEGORY_NAME)));
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public boolean deleteCategoryById(int cid) {
+    public ApiResponse<String> deleteCategoryById(int cid) {
         int affectedCategories = categoryRepository.deleteCategory(cid);
         if (affectedCategories > 0) {
             int affectedBooks = categoryRepository.deleteBooksByCategory(cid);
-            return affectedBooks > 0;
+            if(affectedBooks > 0) {
+                return ApiResponse.<String>builder()
+                        .code(200)
+                        .message(ErrorCode.CATEGORY_DELETED.getMessage())
+                        .result("Category and its books have been deleted successfully.")
+                        .build();
+            } else {
+                throw new AppException(ErrorCode.NO_BOOK_DELETE);
+            }
+        } else {
+            throw new AppException(ErrorCode.ERROR_DELETE);
         }
-        return false;
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Override
-    public boolean activeCategory(int cid) {
-        return categoryRepository.activeCategory(cid) > 0;
+    public ApiResponse<String> activeCategory(int cid) {
+         if(categoryRepository.activeCategory(cid) > 0) {
+             return ApiResponse.<String>builder()
+                     .code(200)
+                     .message(ErrorCode.SUCCESS.getMessage())
+                     .result("Category and its books have been active successfully.")
+                     .build();
+         } else {
+             throw new AppException(ErrorCode.ERROR);
+         }
     }
 }

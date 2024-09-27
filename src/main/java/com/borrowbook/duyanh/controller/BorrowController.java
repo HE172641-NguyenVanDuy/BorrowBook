@@ -13,6 +13,7 @@ import com.borrowbook.duyanh.service.BorrowService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,6 +28,7 @@ public class BorrowController {
     @Autowired
     private BorrowDetailService borrowDetailService;
 
+
     @PostMapping("/borrowingBook")
     public ResponseEntity<ApiResponse<Borrow>> borrowingBook(@RequestBody @Valid BorrowDTO dto) {
         Borrow borrow = borrowService.borrowingBook(dto);
@@ -37,7 +39,7 @@ public class BorrowController {
                 .build();
         return ResponseEntity.ok(apiResponse);
     }
-    
+
     @GetMapping("/get-borrow-active/{uid}")
     public ResponseEntity<ApiResponse<List<Borrow>>> getAllBorrowActive(@PathVariable("uid") int uid) {
         List<Borrow> list = borrowService.getAllBorrowActiveByUserId(uid);
@@ -49,15 +51,25 @@ public class BorrowController {
         return ResponseEntity.ok(apiResponse);
     }
 
-    @PatchMapping("/return-book/{bdId}")
-    public ResponseEntity<ApiResponse<BorrowDetail>> returningBook(@PathVariable("bdId") int bdId) {
-        if(!borrowDetailService.returningBook( bdId)) {
-            throw new  AppException(ErrorCode.ERROR);
-        }
-        ApiResponse<BorrowDetail> apiResponse = ApiResponse.<BorrowDetail>builder()
+    @GetMapping("/get-borrow-details/{bid}")
+    public ResponseEntity<ApiResponse<PageResponse<BorrowDetail>>> getBorrowDetail(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "5") int size,
+            @RequestParam(value = "sort", defaultValue = "BookName") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @PathVariable("uid") int uid) {
+        PageResponse<BorrowDetail> list = borrowDetailService.getAllBorrowDetailByBorrowId(page, size, sortBy, sortDirection, uid);
+        ApiResponse<PageResponse<BorrowDetail>> apiResponse = ApiResponse.<PageResponse<BorrowDetail>>builder()
                 .code(200)
+                .result(list)
                 .message(ErrorCode.SUCCESS.getMessage())
                 .build();
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @PatchMapping("/return-book/{bdId}")
+    public ResponseEntity<ApiResponse<BorrowDetail>> returningBook(@PathVariable("bdId") int bdId) {
+        ApiResponse<BorrowDetail> apiResponse = borrowDetailService.returningBook(bdId);
         return ResponseEntity.ok(apiResponse);
     }
 
@@ -72,14 +84,11 @@ public class BorrowController {
         return ResponseEntity.ok(apiResponse);
     }
 
-    @GetMapping("/get-all-borrow")
-    public ResponseEntity<ApiResponse<PageResponse<Borrow>>> getAllBorrow(
-            @RequestParam(value = "page", defaultValue = "1") int page,
-            @RequestParam(value = "size", defaultValue = "2") int size,
-            @RequestParam(value = "sortOrder", defaultValue = "desc") String sortOrder) {
 
-        PageResponse<Borrow> borrows = borrowService.getBorrowActive(page, size, sortOrder);
-        ApiResponse<PageResponse<Borrow>> apiResponse = ApiResponse.<PageResponse<Borrow>>builder()
+    @GetMapping("/get-borrow")
+    public ResponseEntity<ApiResponse<Borrow>> getAllBorrow() {
+        Borrow borrows = borrowService.getBorrowActive();
+        ApiResponse<Borrow> apiResponse = ApiResponse.<Borrow>builder()
                 .code(200)
                 .message(ErrorCode.SUCCESS.getMessage())
                 .result(borrows)

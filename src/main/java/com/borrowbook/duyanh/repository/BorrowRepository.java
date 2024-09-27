@@ -24,7 +24,7 @@ public interface BorrowRepository extends JpaRepository<Borrow, Integer> {
 
 
     @Query("SELECT bd FROM Borrow bd WHERE bd.expirationDate < :today AND bd.status = 'BORROW'")
-    List<BorrowDetail> findOverdueBorrows(@Param("today")LocalDate today);
+    List<Borrow> findOverdueBorrows(@Param("today")LocalDate today);
 
     @Query("SELECT b FROM Borrow b WHERE b.id = :id ")
     List<Borrow> getBorrowByBorrowId(@Param("id") int id);
@@ -32,18 +32,23 @@ public interface BorrowRepository extends JpaRepository<Borrow, Integer> {
     @Query("SELECT b FROM Borrow b WHERE b.user.id = :uid")
     List<Borrow> getHistoryBorrowByUserId(@Param("uid") int uid);
 
-    @Query(value = "SELECT * FROM Borrow\n" +
-            "WHERE status = 'ACTIVE'\n" +
-            "ORDER BY \n" +
-            "    CASE \n" +
-            "        WHEN MONTH(borrow_date) = MONTH(CURRENT_DATE) AND YEAR(borrow_date) = YEAR(CURRENT_DATE) THEN 0 \n" +
-            "        ELSE 1 \n" +
-            "    END,\n" +
-            "    YEAR(borrow_date) DESC, MONTH(borrow_date) DESC ",
-            nativeQuery = true)
-    Page<Borrow> getBorrowActive(Pageable pageable);
-
     @Query("SELECT COUNT(b) > 0 FROM Borrow b WHERE b.user.id = :uid AND b.status = :status")
     boolean existsByUserAndStatus(@Param("uid") int userId, @Param("status") String status);
+
+    @Query("SELECT b FROM Borrow b WHERE b.status = 'BORROW'")
+    Borrow getBorrowActive();
+
+    // lấy danh sách các borrow theo thứ tuwj là ngafy thuee uux nhất
+
+//    @Query(value = "SELECT * FROM Borrow\n" +
+//            "WHERE status = 'ACTIVE'\n" +
+//            "ORDER BY \n" +
+//            "    CASE \n" +
+//            "        WHEN MONTH(borrow_date) = MONTH(CURRENT_DATE) AND YEAR(borrow_date) = YEAR(CURRENT_DATE) THEN 0 \n" +
+//            "        ELSE 1 \n" +
+//            "    END,\n" +
+//            "    YEAR(borrow_date) DESC, MONTH(borrow_date) DESC ",
+//            nativeQuery = true)
+//    Page<Borrow> getBorrowActive(Pageable pageable);
 
 }

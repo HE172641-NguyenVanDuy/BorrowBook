@@ -8,9 +8,9 @@ import com.borrowbook.duyanh.exception.ErrorCode;
 import com.borrowbook.duyanh.service.CategoryService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,7 +26,7 @@ public class CategoryController {
         this.categoryService = categoryService;
     }
 
-
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PostMapping("/create-category")
     public ResponseEntity<ApiResponse<Category>> createCategory(@RequestBody @Valid CategoryCreationRequest categoryCreationRequest) {
         Category category = categoryService.createCategory(categoryCreationRequest);
@@ -54,38 +54,42 @@ public class CategoryController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PutMapping("/update-category/{categoryId}")
-    public Category updateCategoryById(@Valid @RequestBody CategoryCreationRequest request,
+    public ResponseEntity<ApiResponse<Category>> updateCategoryById(@Valid @RequestBody CategoryCreationRequest request,
                                        @PathVariable("categoryId") int categoryId) {
-        return categoryService.updateCategory(request,categoryId);
-    }
-
-    @DeleteMapping("/delete-category/{categoryId}")
-    public ResponseEntity<ApiResponse<Category>> deleteCategoryById(@PathVariable("categoryId") int id) {
-        if(!categoryService.deleteCategoryById(id)) {
-            throw new AppException(ErrorCode.ERROR_DELETE);
-        }
+        Category category = categoryService.updateCategory(request,categoryId);
         ApiResponse<Category> apiResponse = ApiResponse.<Category>builder()
                 .code(200)
+                .result(category)
                 .message(ErrorCode.CATEGORY_DELETED.getMessage())
                 .build();
         return ResponseEntity.ok(apiResponse);
     }
 
-    @GetMapping("all-delete")
-    public List<Category> getAllCategoryDelete() {
-        return categoryService.getAllCategoryDelete();
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @DeleteMapping("/delete-category/{categoryId}")
+    public ResponseEntity<ApiResponse<String>> deleteCategoryById(@PathVariable("categoryId") int id) {
+        ApiResponse<String> apiResponse = categoryService.deleteCategoryById(id);
+        return ResponseEntity.ok(apiResponse);
     }
 
-    @PatchMapping("/active-category/{id}")
-    public ResponseEntity<ApiResponse<Category>> activeCategory(@PathVariable("id") int id) {
-        if(!categoryService.activeCategory(id)) {
-            throw new AppException(ErrorCode.NOT_FOUND);
-        }
-        ApiResponse<Category> apiResponse = ApiResponse.<Category>builder()
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @GetMapping("/all-delete")
+    public ResponseEntity<ApiResponse<List<Category>>> getAllCategoryDelete() {
+        List<Category> categoryList = categoryService.getAllCategory();
+        ApiResponse<List<Category>> apiResponse = ApiResponse.<List<Category>>builder()
                 .code(200)
-                .message(ErrorCode.SUCCESS.getMessage())
+                .result(categoryList)
+                .message(ErrorCode.CATEGORY_DELETED.getMessage())
                 .build();
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PatchMapping("/active-category/{id}")
+    public ResponseEntity<ApiResponse<String>> activeCategory(@PathVariable("id") int id) {
+        ApiResponse<String> apiResponse = categoryService.activeCategory(id);
         return ResponseEntity.ok(apiResponse);
     }
 

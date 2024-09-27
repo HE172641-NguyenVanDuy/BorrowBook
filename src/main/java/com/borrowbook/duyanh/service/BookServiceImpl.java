@@ -1,11 +1,12 @@
 package com.borrowbook.duyanh.service;
 
 import com.borrowbook.duyanh.dto.request.BookCreationRequest;
+import com.borrowbook.duyanh.dto.response.ApiResponse;
 import com.borrowbook.duyanh.dto.response.PageResponse;
 import com.borrowbook.duyanh.entity.Book;
-import com.borrowbook.duyanh.entity.Borrow;
+import com.borrowbook.duyanh.entity.BorrowDetail;
 import com.borrowbook.duyanh.entity.Category;
-import com.borrowbook.duyanh.entity.User;
+import com.borrowbook.duyanh.exception.AppException;
 import com.borrowbook.duyanh.exception.ErrorCode;
 import com.borrowbook.duyanh.repository.BookRepository;
 import com.borrowbook.duyanh.repository.CategoryRepository;
@@ -15,9 +16,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
 
 @Service
 @Slf4j
@@ -34,7 +36,6 @@ public class BookServiceImpl implements BookService{
 
     @Transactional
     @Override
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public Book createdBook(BookCreationRequest request) {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new RuntimeException(ErrorCode.NOT_FOUND.getMessage()));
@@ -59,45 +60,72 @@ public class BookServiceImpl implements BookService{
     @Transactional
     @Modifying
     @Override
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public Book updateBook(BookCreationRequest request, int id) {
         Book book = getBookById(id);
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new RuntimeException(ErrorCode.NOT_FOUND.getMessage()));
-        book.setBookName(request.getBookName());
-        book.setReleaseDate(request.getReleaseDate());
-        book.setPrice(request.getPrice());
-        book.setStatus(request.getStatus());
-        book.setAuthor(request.getAuthor());
-        book.setQuantity(request.getQuantity());
+        if( !(request.getBookName().isEmpty())
+                && (request.getBookName() != null) ) {
+            book.setBookName(request.getBookName());
+        }
+
+        if( !(request.getReleaseDate().toString().isEmpty())
+                && (request.getReleaseDate() != null) ) {
+            book.setReleaseDate(request.getReleaseDate());
+        }
+
+        if(request.getPrice().compareTo(BigDecimal.valueOf(1000)) >= 0) {
+            book.setPrice(request.getPrice());
+        }
+
+        if( !(request.getStatus().isEmpty())
+                && (request.getStatus() != null) ) {
+            book.setStatus(request.getStatus());
+        }
+
+        if( !(request.getAuthor().isEmpty())
+                && (request.getAuthor() != null) ) {
+            book.setAuthor(request.getAuthor());
+        }
+
+        if(request.getQuantity() > 0) {
+            book.setQuantity(request.getQuantity());
+        }
         book.setCategory(category);
 
         return bookRepository.saveAndFlush(book);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+
     @Transactional
     @Override
-    public boolean deleteBookById(int id) {
-        return bookRepository.deleteBookByBookId(id) > 0;
+    public ApiResponse<Book> deleteBookById(int id) {
+        boolean isDelete = bookRepository.deleteBookByBookId(id) > 0;
+        if(!isDelete) {
+            throw new AppException(ErrorCode.ERROR_DELETE);
+        }
+        return ApiResponse.<Book>builder()
+                .code(200)
+                .message(ErrorCode.SUCCESS.getMessage())
+                .build();
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Override
-    public boolean activeBookById(int id) {
-        return bookRepository.activeBookById(id) > 0;
+    public ApiResponse<Book> activeBookById(int id) {
+        boolean isActive = bookRepository.activeBookById(id) > 0;
+        if(!isActive) {
+            throw new AppException(ErrorCode.ERROR);
+        }
+        return ApiResponse.<Book>builder()
+                .code(200)
+                .message(ErrorCode.SUCCESS.getMessage())
+                .build();
     }
 
 
     @Override
     public PageResponse<Book> getAllBookActive(int page, int size, String sortBy, String sortDirection) {
-        Sort.Direction direction;
-        try {
-            direction = Sort.Direction.fromString(sortDirection);
-        } catch (IllegalArgumentException e) {
-            direction = Sort.Direction.ASC; // Giá trị mặc định nếu có lỗi
-        }
-        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(direction,sortBy));
+        Pageable pageable = pagingWithCondition(page,size,sortBy,sortDirection);
         var pageData = bookRepository.getAllBookActive(pageable);
         return PageResponse.<Book>builder()
                 .currentPage(page)
@@ -108,16 +136,9 @@ public class BookServiceImpl implements BookService{
                 .build();
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Override
     public PageResponse<Book> getAllDeleteBook(int page, int size, String sortBy, String sortDirection) {
-        Sort.Direction direction;
-        try {
-            direction = Sort.Direction.fromString(sortDirection);
-        } catch (IllegalArgumentException e) {
-            direction = Sort.Direction.ASC; // Giá trị mặc định nếu có lỗi
-        }
-        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(direction,sortBy));
+        Pageable pageable = pagingWithCondition(page,size,sortBy,sortDirection);
         var pageData = bookRepository.getAllDeleteBook(pageable);
         return PageResponse.<Book>builder()
                 .currentPage(page)
@@ -130,7 +151,7 @@ public class BookServiceImpl implements BookService{
 
     @Override
     public PageResponse<Book> getAllBookByCategoryId(int page, int size, String sortBy, String sortDirection, int categoryId) {
-        Pageable pageable = paging(page,size,sortBy,sortDirection,categoryId);
+        Pageable pageable = pagingWithCondition(page,size,sortBy,sortDirection);
         var pageData = bookRepository.getAllBookByCategoryId(categoryId,pageable);
         return PageResponse.<Book>builder()
                 .currentPage(page)
@@ -144,7 +165,7 @@ public class BookServiceImpl implements BookService{
     @Override
     public PageResponse<Book> getAllBookByPostId(int page, int size, String sortBy, String sortDirection, int pid) {
 
-        Pageable pageable = paging(page,size,sortBy,sortDirection,pid);
+        Pageable pageable = pagingWithCondition(page,size,sortBy,sortDirection);
         var pageData = bookRepository.getAllBookByPostId(pid,pageable);
         return PageResponse.<Book>builder()
                 .currentPage(page)
@@ -156,7 +177,7 @@ public class BookServiceImpl implements BookService{
     }
 
 
-    private Pageable paging(int page, int size, String sortBy, String sortDirection, int pid) {
+    private Pageable pagingWithCondition(int page, int size, String sortBy, String sortDirection) {
         Sort.Direction direction;
         try {
             direction = Sort.Direction.fromString(sortDirection);

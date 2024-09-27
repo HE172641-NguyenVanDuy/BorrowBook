@@ -3,6 +3,7 @@ package com.borrowbook.duyanh.service;
 import com.borrowbook.duyanh.dto.request.BorrowDTO;
 import com.borrowbook.duyanh.dto.response.PageResponse;
 import com.borrowbook.duyanh.entity.Borrow;
+import com.borrowbook.duyanh.entity.BorrowDetail;
 import com.borrowbook.duyanh.entity.User;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
@@ -20,5 +21,5 @@ public interface BorrowService {
 
     public List<Borrow> getHistoryBorrowByUserId(int id);
 
-    PageResponse<Borrow> getBorrowActive(int page, int size, String sortOrder);
+    Borrow getBorrowActive();
 }

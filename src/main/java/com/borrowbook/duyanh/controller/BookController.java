@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,6 +30,7 @@ public class BookController {
         this.bookService = bookService;
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(summary = "Create new book", description = "API create new book into system.")
     @PostMapping("/created-book")
     public ResponseEntity<ApiResponse<Book>> createdBook(@RequestBody @Valid BookCreationRequest request) {
@@ -41,6 +43,7 @@ public class BookController {
         return ResponseEntity.ok(apiResponse);
     }
 
+
     @GetMapping("/{bookId}")
     public ResponseEntity<ApiResponse<Book>> getBookById(@PathVariable("bookId") int id) {
         Book book = bookService.getBookById(id);
@@ -52,6 +55,7 @@ public class BookController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PutMapping("/update-book/{bookId}")
     public ResponseEntity<ApiResponse<Book>> updateBook(@PathVariable("bookId") int id,
                                                         @Valid @RequestBody BookCreationRequest request) {
@@ -64,30 +68,21 @@ public class BookController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @DeleteMapping("/delete-book/{bookId}")
     public ResponseEntity<ApiResponse<Book>> deleteBook(@PathVariable("bookId") int bookId) {
-        if(!bookService.deleteBookById(bookId)) {
-            throw new AppException(ErrorCode.ERROR_DELETE);
-        }
-        ApiResponse<Book> apiResponse = ApiResponse.<Book>builder()
-                .code(200)
-                .message(ErrorCode.BOOK_DELETED.getMessage())
-                .build();
+        ApiResponse<Book> apiResponse = bookService.deleteBookById(bookId);
         return ResponseEntity.ok(apiResponse);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PatchMapping("/active-book/{bookId}")
     public ResponseEntity<ApiResponse<Book>> activeBook(@PathVariable("bookId") int bookId) {
-        if(!bookService.activeBookById(bookId)) {
-            throw new AppException(ErrorCode.ERROR_DELETE);
-        }
-        ApiResponse<Book> apiResponse = ApiResponse.<Book>builder()
-                .code(200)
-                .message(ErrorCode.BOOK_ACTIVE.getMessage())
-                .build();
+        ApiResponse<Book> apiResponse = bookService.activeBookById(bookId);
         return ResponseEntity.ok(apiResponse);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @GetMapping("/get-all-deleted-book")
     public ResponseEntity<ApiResponse<PageResponse<Book>>> getAllDeletedBook(
             @RequestParam(value = "page", defaultValue = "1") int page,
