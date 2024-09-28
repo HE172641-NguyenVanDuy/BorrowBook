@@ -201,6 +201,20 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
+    public PageResponse<UserResponse> searchAdvancedUser(int page, int size, String sortBy, String sortDirection, String keyword) {
+        Pageable pageable = pagingDirection(page,size,sortBy,sortDirection);
+        var pageData =  userRepository.searchAdvancedUser(pageable,keyword);
+        List<UserResponse> userResponseList = pageData.stream().map(userMapper::toUserResponse).toList();
+        return PageResponse.<UserResponse>builder()
+                .currentPage(page)
+                .pageSize(pageData.getSize())
+                .totalPages(pageData.getTotalPages())
+                .totalElement(pageData.getTotalElements())
+                .data(userResponseList)
+                .build();
+    }
+
+    @Override
     public User getMyInfo() {
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();

@@ -84,7 +84,6 @@ public class BorrowController {
         return ResponseEntity.ok(apiResponse);
     }
 
-
     @GetMapping("/get-borrow")
     public ResponseEntity<ApiResponse<Borrow>> getAllBorrow() {
         Borrow borrows = borrowService.getBorrowActive();

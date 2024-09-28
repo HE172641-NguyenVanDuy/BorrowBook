@@ -8,7 +8,7 @@ import com.borrowbook.duyanh.dto.response.UserResponse;
 import com.borrowbook.duyanh.entity.User;
 import com.borrowbook.duyanh.exception.ErrorCode;
 import com.borrowbook.duyanh.service.UserService;
-import com.borrowbook.duyanh.utils.ExportUsersExcel;
+import com.borrowbook.duyanh.utils.UtilsExcel;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/user")
@@ -28,7 +27,7 @@ public class UserController {
     private UserService userService;
 
     @Autowired
-    private ExportUsersExcel exportUsersExcel;
+    private UtilsExcel exportUsersExcel;
 
     @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("/get-user/{id}")
@@ -128,11 +127,29 @@ public class UserController {
             @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
             @RequestBody SearchUserDTO dto) {
 
-        PageResponse<UserResponse> seachUser = userService.searchUser(page,size,sortBy,sortDirection,dto);
+        PageResponse<UserResponse> searchUser = userService.searchUser(page,size,sortBy,sortDirection,dto);
         ApiResponse<PageResponse<UserResponse>> apiResponse = ApiResponse.<PageResponse<UserResponse>>builder()
                 .code(200)
                 .message(ErrorCode.USER_RETRIEVED.getMessage())
-                .result(seachUser)
+                .result(searchUser)
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN')")
+    @PostMapping("/search_advanced")
+    public ResponseEntity<ApiResponse<PageResponse<UserResponse>>> searchAdvancedUser(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "2") int size,
+            @RequestParam(value = "sort", defaultValue = "username") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestBody String keyword) {
+
+        PageResponse<UserResponse> searchUser = userService.searchAdvancedUser(page,size,sortBy,sortDirection,keyword);
+        ApiResponse<PageResponse<UserResponse>> apiResponse = ApiResponse.<PageResponse<UserResponse>>builder()
+                .code(200)
+                .message(ErrorCode.USER_RETRIEVED.getMessage())
+                .result(searchUser)
                 .build();
         return ResponseEntity.ok(apiResponse);
     }
@@ -169,9 +186,10 @@ public class UserController {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN')")
-    @GetMapping(value = "/export-excel") //
-    public void exportUsersToExcel(HttpServletResponse response) throws IOException {
-        exportUsersExcel.generateExcel(response);
+    @GetMapping(value = "/export-excel-search")
+    public void exportSearchUsersToExcel(HttpServletResponse response, @RequestParam(required = false) String keyword) throws IOException {
+        boolean isSearch = (keyword != null && !keyword.trim().isEmpty());
+        exportUsersExcel.generateExcel(response, isSearch, keyword);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN')")

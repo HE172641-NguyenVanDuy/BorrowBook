@@ -1,5 +1,6 @@
 package com.borrowbook.duyanh.utils;
 
+import com.borrowbook.duyanh.configuration.Translator;
 import com.borrowbook.duyanh.dto.response.ApiResponse;
 import com.borrowbook.duyanh.entity.InformationOfUser;
 import com.borrowbook.duyanh.entity.Role;
@@ -18,32 +19,27 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-//import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.borrowbook.duyanh.utils.Constants.*;
 
 @Component
-public class ExportUsersExcel {
+public class UtilsExcel {
 
-    private static final Logger log = LoggerFactory.getLogger(ExportUsersExcel.class);
+    private static final Logger log = LoggerFactory.getLogger(UtilsExcel.class);
     @Autowired
     private UserRepository userRepository;
 
@@ -59,22 +55,28 @@ public class ExportUsersExcel {
     @Value("${defaultPassword}")
     String defaultPassword;
 
-    public ExportUsersExcel() {
+    public UtilsExcel() {
     }
 
-    public void generateExcel(HttpServletResponse response) throws IOException {
+    public void generateExcel(HttpServletResponse response, boolean isSearch, String keyword) throws IOException {
         setUpResponse(response);
-        List<User> usersList = userRepository.findAll();
+        List<User> usersList;
+        if(!isSearch && keyword == null) {
+            usersList = userRepository.findAll();
+        } else {
+            usersList = userRepository.searchAdvancedUser(keyword);
+        }
+
         XSSFWorkbook workbook = new XSSFWorkbook();
-        XSSFSheet sheet = workbook.createSheet("User list");
+        XSSFSheet sheet = workbook.createSheet(Translator.toLocale("sheet.name"));
         XSSFRow row = sheet.createRow(0);
 
-        row.createCell(0).setCellValue("User name");
-        row.createCell(1).setCellValue("Role name");
-        row.createCell(2).setCellValue("Email");
-        row.createCell(3).setCellValue("Phone number");
-        row.createCell(4).setCellValue("Dob");
-        row.createCell(5).setCellValue("Status");
+        row.createCell(0).setCellValue(Translator.toLocale("username.title"));
+        row.createCell(1).setCellValue(Translator.toLocale("role.title"));
+        row.createCell(2).setCellValue(Translator.toLocale("email.title"));
+        row.createCell(3).setCellValue(Translator.toLocale("phone.number.title"));
+        row.createCell(4).setCellValue(Translator.toLocale("dob.title"));
+        row.createCell(5).setCellValue(Translator.toLocale("status.title"));
 
         int dataRowIndex = 1;
         for (User u : usersList) {
@@ -114,35 +116,27 @@ public class ExportUsersExcel {
     public ApiResponse<String> getTemporaryFileInServer(MultipartFile file, HttpServletResponse response) {
         String msg = "";
         try {
-
             String tempDir = System.getProperty("java.io.tmpdir");
             String filePath = tempDir + java.io.File.separator + UUID.randomUUID() + "_" + file.getOriginalFilename();
 
-            // Lưu file tạm thời trên server
             java.io.File tempFile = new java.io.File(filePath);
             file.transferTo(tempFile);
 
-            // Gọi phương thức xử lý file Excel
             importExcel(response, filePath);
 
-            // Xóa file tạm thời sau khi xử lý xong
             if (tempFile.exists()) {
                 tempFile.delete();
             }
-            //Data has been uploaded successfully.
-            return ApiResponse.<String>builder()
-                    .code(200)
-                    .message("Data has been uploaded successfully.")
-                    .build();
+            msg = Translator.toLocale("upload.success");
         } catch (IOException e) {
-            return ApiResponse.<String>builder()
-                    .code(200)
-                    .message("Error uploading file: " + e.getMessage())
-                    .build();
+            msg = Translator.toLocale("error.upload") + e.getMessage();
         }
+        return ApiResponse.<String>builder()
+                .code(200)
+                .message(msg)
+                .build();
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
     @Transactional
     public void importExcel(HttpServletResponse response, String filePath) {
         HashMap<String, List<Integer>> emailMap = new HashMap<>();
@@ -172,7 +166,7 @@ public class ExportUsersExcel {
                         ,usernameMap,existingPhoneNumber,phoneNumberMap);
 
                 Cell errorCell = row.createCell(8);
-                errorCell.setCellValue(errorMsg.toString());
+                errorCell.setCellValue(errorMsg);
 
                 CellStyle style = row.getSheet().getWorkbook().createCellStyle();
                 style.setWrapText(true);
@@ -205,13 +199,13 @@ public class ExportUsersExcel {
         if (usernameCell != null && usernameCell.getCellType() == CellType.STRING) {
             String username = usernameCell.getStringCellValue();
             if (!checkUsername(username)) {
-                errorMsg.append("User name is in the wrong format!\n");
+                errorMsg.append(Translator.toLocale("username.wrong") + "\r\n");
             } else {
                 if (existingUsername.contains(username)) {
-                    errorMsg.append("User name already exists in the database!\n");
+                    errorMsg.append(Translator.toLocale("username.existed") + "\r\n");
                 }
                 if (usernameMap.containsKey(username)) {
-                    errorMsg.append("User name already exists in the Excel file at rows: ");
+                    errorMsg.append(Translator.toLocale("username.existed.row") + "\r\n");
                     errorMsg.append(usernameMap.get(username).toString());
                     errorMsg.append("\n");
                 } else {
@@ -221,7 +215,7 @@ public class ExportUsersExcel {
                 usernameMap.get(username).add(row.getRowNum());
             }
         } else {
-            errorMsg.append("User name is null!\n");
+            errorMsg.append(Translator.toLocale("username.null") + "\r\n");
         }
 
         Cell passwordCell = row.getCell(1);
@@ -231,28 +225,28 @@ public class ExportUsersExcel {
                 password = passwordCell.getStringCellValue();
                 log.info("Password is :" + password);
                 if (!checkPassword(password)) {
-                    errorMsg.append("Password is in the wrong format!\r\n");
+                    errorMsg.append(Translator.toLocale("password.wrong") + "\r\n");
                 }
             } else if (passwordCell.getCellType() == CellType.NUMERIC) {
                 password = String.valueOf((long) passwordCell.getNumericCellValue());
                 log.info("Password is :" + password);
                 if (!checkPassword(password)) {
-                    errorMsg.append("Password is in the wrong format!\r\n");
+                    errorMsg.append(Translator.toLocale("password.wrong") + "\r\n");
                 }
             }
-        } else log.warn("Password is null !");
+        } else log.warn(Translator.toLocale("password.null") );
 
         Cell phoneNumberCell = row.getCell(2);
         if (phoneNumberCell != null && phoneNumberCell.getCellType() == CellType.STRING) {
             String phoneNumber = usernameCell.getStringCellValue();
             if (!checkPhoneNumber(phoneNumber)) {
-                errorMsg.append("Phone number is in the wrong format!\n");
+                errorMsg.append(Translator.toLocale("phone.number.wrong") + "\r\n");
             } else {
                 if (existingPhoneNumber.contains(phoneNumber)) {
-                    errorMsg.append("Phone number already exists in the database!\n");
+                    errorMsg.append(Translator.toLocale("phone.number.existed") + "\r\n");
                 }
                 if (phoneNumberMap.containsKey(phoneNumber)) {
-                    errorMsg.append("Phone number already exists in the Excel file at rows: ");
+                    errorMsg.append(Translator.toLocale("phone.number.existed.row") + "\r\n");
                     errorMsg.append(phoneNumberMap.get(phoneNumber).toString());
                     errorMsg.append("\n");
                 } else {
@@ -262,7 +256,7 @@ public class ExportUsersExcel {
                 phoneNumberMap.get(phoneNumber).add(row.getRowNum());
             }
         } else {
-            errorMsg.append("Phone number is null!\n");
+            errorMsg.append(Translator.toLocale("phone.number.null"));
         }
 
         Cell emailCell = row.getCell(3);
@@ -270,14 +264,14 @@ public class ExportUsersExcel {
             String email = emailCell.getStringCellValue();
 
             if (!checkEmail(email)) {
-                errorMsg.append("Email is in the wrong format!\n");
+                errorMsg.append(Translator.toLocale("email.wrong") + "\r\n");
             } else {
                 if (existingEmails.contains(email)) {
-                    errorMsg.append("Email already exists in the database!\n");
+                    errorMsg.append(Translator.toLocale("email.number.existed") + "\r\n");
                 }
 
                 if (emailMap.containsKey(email)) {
-                    errorMsg.append("Email already exists in the Excel file at rows: ");
+                    errorMsg.append(Translator.toLocale("email.number.existed.row") + "\r\n");
                     errorMsg.append(emailMap.get(email).toString());
                     errorMsg.append("\n");
                 } else {
@@ -287,7 +281,7 @@ public class ExportUsersExcel {
                 emailMap.get(email).add(row.getRowNum());
             }
         } else {
-            errorMsg.append("Email is null!\n");
+            errorMsg.append(Translator.toLocale("email.number.null") + "\r\n");
         }
 
         Cell dobCell = row.getCell(4);
@@ -296,7 +290,7 @@ public class ExportUsersExcel {
                 Date dobDate = dobCell.getDateCellValue();
                 log.info("Dob is: " + dobDate.toString());
                 if (!validateDateOfBirth(dobDate)) {
-                    errorMsg.append("Date of birth is in the wrong format!\r\n");
+                    errorMsg.append(Translator.toLocale("dob.wrong") + "\r\n");
                 }
             }
             if (dobCell.getCellType() == CellType.STRING) {
@@ -306,17 +300,17 @@ public class ExportUsersExcel {
                     Date dobDate = dateFormat.parse(dobString);
                     log.info(dobDate.toString());
                     if (!validateDateOfBirth(dobDate)) {
-                        errorMsg.append("Date of birth is in the wrong format!\r\n");
+                        errorMsg.append(Translator.toLocale("dob.wrong") + "\r\n");
                     }
                 } catch (ParseException e) {
-                    errorMsg.append("Date of birth is not a valid date!\r\n");
+                    errorMsg.append(Translator.toLocale("valid.dob") + "\r\n");
                     log.error("Error parsing date: " + dobCell.getStringCellValue(), e);
                 }
             }
         } else {
             //hasDuplicates = true;
             log.warn("Dob is null !");
-            errorMsg.append("Dob cell is in the wrong format!\r\n");
+            errorMsg.append(Translator.toLocale("dob.wrong") + "\r\n");
         }
 
         Cell roleCell = row.getCell(5);
@@ -326,7 +320,7 @@ public class ExportUsersExcel {
 
                 log.info("Role is: " + role.toString());
                 if (getRoleByRoleName(role) == null) {
-                    errorMsg.append("Role is int the wrong format!\r\n");
+                    errorMsg.append(Translator.toLocale("role.wrong") + "\r\n");
                 }
             } else
                 System.out.println(roleCell.getCellType().name());
@@ -338,8 +332,6 @@ public class ExportUsersExcel {
 
 
     private void exportExcelWithDuplicates(HttpServletResponse response, Workbook workbook) throws IOException {
-        LocalDateTime now = LocalDateTime.now();
-
         response.setContentType("application/octet-stream");
         response.setHeader("Content-Disposition", "attachment; filename=duplicatedRowExcel.xlsx");
 
@@ -351,7 +343,7 @@ public class ExportUsersExcel {
         System.out.println("File Excel có các dòng lỗi trùng lặp đã được xuất ra.");
     }
 
-    private void saveExcelData(Sheet sheet) throws Exception {
+    private void saveExcelData(Sheet sheet) {
 
         for (Row r : sheet) {
             User user = new User();
@@ -425,21 +417,21 @@ public class ExportUsersExcel {
         }
     }
 
-    private boolean checkUsername(String username) throws Exception {
+    private boolean checkUsername(String username) {
         if (username.length() >= 6 && username.length() <= 30 && username.matches("^[a-zA-Z0-9]+$")) {
             return true;
         }
         return false;
     }
 
-    private boolean checkPassword(String pa) throws Exception {
+    private boolean checkPassword(String pa) {
         if (pa.length() >= 6 && pa.length() <= 20) {
             return true;
         }
         return false;
     }
 
-    private boolean checkPhoneNumber(String pa) throws Exception {
+    private boolean checkPhoneNumber(String pa)  {
         if (pa.matches("^(?:\\+84|0)(?:[1-9]\\d{8})$")) {
             return true;
         }

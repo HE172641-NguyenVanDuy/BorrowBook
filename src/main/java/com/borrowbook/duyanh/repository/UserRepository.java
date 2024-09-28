@@ -39,6 +39,28 @@ public interface UserRepository extends JpaRepository<User, Integer> {
                            @Param("roleName") String roleName,
                            Pageable pageable);
 
+    @Query("SELECT u FROM User u " +
+            "LEFT JOIN u.informationOfUser i " +
+            "LEFT JOIN u.role r " +
+            "WHERE u.username LIKE %:keyword% OR " +
+            "r.roleName LIKE %:keyword% OR " +
+            "i.email LIKE %:keyword% OR " +
+            "i.phoneNumber LIKE %:keyword% OR " +
+            "CAST(i.dob AS string) LIKE %:keyword% OR " +
+            "u.status LIKE %:keyword%")
+    Page<User> searchAdvancedUser(Pageable pageable, String keyword);
+
+    @Query("SELECT u FROM User u " +
+            "LEFT JOIN u.informationOfUser i " +
+            "LEFT JOIN u.role r " +
+            "WHERE u.username LIKE %:keyword% OR " +
+            "r.roleName LIKE %:keyword% OR " +
+            "i.email LIKE %:keyword% OR " +
+            "i.phoneNumber LIKE %:keyword% OR " +
+            "CAST(i.dob AS string) LIKE %:keyword% OR " +
+            "u.status LIKE %:keyword%")
+    List<User> searchAdvancedUser(String keyword);
+
     @Query("SELECT s  FROM User s WHERE s.status LIKE 'ACTIVE' ")
     Page<User> getAllUserActive(Pageable pageable);
 

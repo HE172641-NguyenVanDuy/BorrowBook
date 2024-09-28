@@ -61,7 +61,7 @@ public class PostServiceImpl implements PostService{
         String msg = "";
         try {
             postRepository.delete(post);
-            msg = ErrorCode.DELETE_POST_FAIL.getMessage();
+            msg = ErrorCode.DELETE_POST_SUCCESS.getMessage();
         } catch (Exception e) {
             msg = ErrorCode.DELETE_POST_FAIL.getMessage();
         }
