@@ -119,6 +119,24 @@ public class UserController {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN')")
+    @PostMapping("/search_advanced")
+    public ResponseEntity<ApiResponse<PageResponse<UserResponse>>> searchAdvancedUser(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "2") int size,
+            @RequestParam(value = "sort", defaultValue = "username") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestBody String keyword) {
+
+        PageResponse<UserResponse> searchUser = userService.searchAdvancedUser(page, size, sortBy, sortDirection, keyword);
+        ApiResponse<PageResponse<UserResponse>> apiResponse = ApiResponse.<PageResponse<UserResponse>>builder()
+                .code(200)
+                .message(ErrorCode.USER_RETRIEVED.getMessage())
+                .result(searchUser)
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PostMapping("/search_user")
     public ResponseEntity<ApiResponse<PageResponse<UserResponse>>> searchUser(
             @RequestParam(value = "page", defaultValue = "1") int page,
@@ -136,23 +154,7 @@ public class UserController {
         return ResponseEntity.ok(apiResponse);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
-    @PostMapping("/search_advanced")
-    public ResponseEntity<ApiResponse<PageResponse<UserResponse>>> searchAdvancedUser(
-            @RequestParam(value = "page", defaultValue = "1") int page,
-            @RequestParam(value = "size", defaultValue = "2") int size,
-            @RequestParam(value = "sort", defaultValue = "username") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
-            @RequestBody String keyword) {
 
-        PageResponse<UserResponse> searchUser = userService.searchAdvancedUser(page,size,sortBy,sortDirection,keyword);
-        ApiResponse<PageResponse<UserResponse>> apiResponse = ApiResponse.<PageResponse<UserResponse>>builder()
-                .code(200)
-                .message(ErrorCode.USER_RETRIEVED.getMessage())
-                .result(searchUser)
-                .build();
-        return ResponseEntity.ok(apiResponse);
-    }
 
     @PatchMapping("/active-user/{id}")
     public ResponseEntity<ApiResponse<String>> activeUser(@PathVariable("id") int id) {
